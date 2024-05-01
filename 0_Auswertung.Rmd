@@ -1,0 +1,168 @@
+```{r}
+library(tidyverse)
+library(readxl)
+library(skimr)
+library(corrr)
+library(rstanarm)
+library(bayestestR)
+library(bayesplot)
+library(tidymodels)
+```
+
+```{r}
+options(mc.cores = parallel::detectCores())
+```
+
+```{r}
+conflicted::conflict_prefer("select", "dplyr")
+conflicted::conflict_prefer("filter", "dplyr")
+```
+
+# Vorbereitung der Daten
+## Daten einlesen
+```{r}
+d_raw <- read_excel("231201_Working_Data.xlsx")
+```
+
+## Unnötige Variablen entfernen
+```{r}
+raw1 <- d_raw %>% 
+  select(-c(CASE, SERIAL, REF, QUESTNNR, MODE, STARTED, TIME001:TIME016, TIME_SUM, LASTDATA, FINISHED, Q_VIEWER, LASTPAGE, MAXPAGE, MISSREL, MISSING, MAILSENT, TIME_RSI, SD10))
+```
+
+## Variablenbeschreibung (Zeile) entfernen
+```{r}
+raw1 = raw1[-1,]
+```
+
+## Datensatz mit den Pflichtvariablen erstellen
+```{r}
+raw_pfl <- raw1 %>% 
+  select(-c(AZ01:AZ14, AZ33:AZ76))
+```
+
+## Spaltennamen umbenennen
+```{r}
+names(raw_pfl) <- c("AZ16", "AZ17", "AZ18", "AZ19", "AZ20", "AZ21", "AZ22", "AZ23", "AZ24", "AZ25", "AZ26", "AZ27", "AZ28", "AZ29", "AZ30", "AZ31", "MT01", "PE_B1", "PE_B2", "PE_B3", "PE_K1", "PE_K2", "PE_K3", "PE_S1", "PE_S2", "PE_S3", "PE_E1", "PE_E2", "PE_E3", "PS1", "PS2", "PS3", "PS4", "PS5", "PS6", "PS7", "gender", "consent", "age", "education", "leader", "expericene", "experience2", "job", "area", "comment", "honesty")
+```
+
+## Weitere Variablen rausschmeißen
+```{r}
+raw_pfl <- raw_pfl %>% 
+  select(-c(expericene, comment, MT01, consent, honesty))
+```
+
+## ID-Spalte einfügen
+```{r}
+raw_pfl <- raw_pfl %>% 
+  mutate(ID = row_number()) %>% 
+  select(ID, everything())
+```
+
+## Recodieren der Psychologische Sicherheit Items
+```{r}
+raw_pfl1 <- raw_pfl %>% 
+  mutate(across(
+    .cols = c(PS3, PS5, PS6),
+    .fns = ~ dplyr::recode(.,
+                    `1` = 7,
+                    `2` = 6,
+                    `3` = 5,
+                    `4` = 4,
+                    `5` = 3,
+                    `6` = 2,
+                    `7` = 1)))
+```
+
+# Variablen umkodieren
+```{r}
+raw_pfl4$gender <- as.numeric(raw_pfl4$gender)
+raw_pfl4$age <- as.numeric(raw_pfl4$age)
+raw_pfl4$education <- as.numeric(raw_pfl4$education)
+raw_pfl4$leader <- as.numeric(raw_pfl4$leader)
+raw_pfl4$experience2 <- as.numeric(raw_pfl4$experience2)
+```
+
+```{r}
+raw_pfl4$AZ16 <- as.numeric(raw_pfl4$AZ16)
+raw_pfl4$AZ17 <- as.numeric(raw_pfl4$AZ17)
+raw_pfl4$AZ18 <- as.numeric(raw_pfl4$AZ18)
+raw_pfl4$AZ19 <- as.numeric(raw_pfl4$AZ19)
+raw_pfl4$AZ20 <- as.numeric(raw_pfl4$AZ20)
+raw_pfl4$AZ21 <- as.numeric(raw_pfl4$AZ21)
+raw_pfl4$AZ22 <- as.numeric(raw_pfl4$AZ22)
+raw_pfl4$AZ23 <- as.numeric(raw_pfl4$AZ23)
+raw_pfl4$AZ24 <- as.numeric(raw_pfl4$AZ24)
+raw_pfl4$AZ25 <- as.numeric(raw_pfl4$AZ25)
+raw_pfl4$AZ26 <- as.numeric(raw_pfl4$AZ26)
+raw_pfl4$AZ27 <- as.numeric(raw_pfl4$AZ27)
+raw_pfl4$AZ28 <- as.numeric(raw_pfl4$AZ28)
+raw_pfl4$AZ29 <- as.numeric(raw_pfl4$AZ29)
+raw_pfl4$AZ30 <- as.numeric(raw_pfl4$AZ30)
+raw_pfl4$AZ31 <- as.numeric(raw_pfl4$AZ31)
+```
+
+```{r}
+raw_pfl4$PE_B1 <- as.numeric(raw_pfl4$PE_B1)
+raw_pfl4$PE_B2 <- as.numeric(raw_pfl4$PE_B2)
+raw_pfl4$PE_B3 <- as.numeric(raw_pfl4$PE_B3)
+raw_pfl4$PE_K1 <- as.numeric(raw_pfl4$PE_K1)
+raw_pfl4$PE_K2 <- as.numeric(raw_pfl4$PE_K2)
+raw_pfl4$PE_K3 <- as.numeric(raw_pfl4$PE_K3)
+raw_pfl4$PE_S1 <- as.numeric(raw_pfl4$PE_S1)
+raw_pfl4$PE_S2 <- as.numeric(raw_pfl4$PE_S2)
+raw_pfl4$PE_S3 <- as.numeric(raw_pfl4$PE_S3)
+raw_pfl4$PE_E1 <- as.numeric(raw_pfl4$PE_E1)
+raw_pfl4$PE_E2 <- as.numeric(raw_pfl4$PE_E2)
+raw_pfl4$PE_E3 <- as.numeric(raw_pfl4$PE_E3)
+```
+
+```{r}
+raw_pfl4$PS1 <- as.numeric(raw_pfl4$PS1)
+raw_pfl4$PS2 <- as.numeric(raw_pfl4$PS2)
+raw_pfl4$PS3 <- as.numeric(raw_pfl4$PS3)
+raw_pfl4$PS4 <- as.numeric(raw_pfl4$PS4)
+raw_pfl4$PS5 <- as.numeric(raw_pfl4$PS5)
+raw_pfl4$PS6 <- as.numeric(raw_pfl4$PS6)
+raw_pfl4$PS7 <- as.numeric(raw_pfl4$PS7)
+```
+
+```{r}
+raw_pfl4$job <- as.numeric(raw_pfl4$job)
+```
+
+## Geschlecht umkodieren
+```{r}
+raw_pfl4 %>% 
+  count(gender)
+```
+
+
+```{r}
+raw_pfl4 <- raw_pfl4 %>% 
+  mutate(gender_f = case_when(
+    gender == -2 ~ 1,
+    gender == -1 ~ 0)) %>% 
+  select(-gender)
+```
+
+## Führungsposition umkodieren
+```{r}
+raw_pfl4 %>% 
+  count(leader)
+```
+
+```{r}
+raw_pfl4 <- raw_pfl4 %>% 
+  mutate(leader_yes = case_when(
+    leader == 1 ~ 1,
+    leader == 2 ~ 0
+  )) %>% 
+  select(-leader)
+```
+
+# Überblick über die Daten
+```{r}
+skim(raw_pfl4)
+```
+
