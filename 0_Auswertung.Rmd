@@ -96,13 +96,11 @@ raw4 <- raw3 %>%
   mutate(across(
     .cols = c(OC_A02),
     .fns = ~ dplyr::recode(.,
-                    `1` = 7,
-                    `2` = 6,
-                    `3` = 5,
-                    `4` = 4,
-                    `5` = 3,
-                    `6` = 2,
-                    `7` = 1)))
+                    `1` = 5,
+                    `2` = 4,
+                    `3` = 3,
+                    `4` = 2,
+                    `5` = 1)))
 ```
 
 # Variablen umkodieren
@@ -165,7 +163,6 @@ raw4$PS_05 <- as.numeric(raw4$PS_05)
 raw4$PS_06 <- as.numeric(raw4$PS_06)
 raw4$PS_07 <- as.numeric(raw4$PS_07)
 ```
-
 
 ```{r}
 raw4$QQ_01 <- as.numeric(raw4$QQ_01)
@@ -270,6 +267,7 @@ psych::alpha(subset(d_work, select=c(OC_A01:OC_A05), check.keys=TRUE))
 ```{r}
 psych::alpha(subset(d_work, select=c(QQ_01:QQ_07), check.keys=TRUE))
 ```
+
 
 ## SL
 ```{r}
