@@ -77,7 +77,7 @@ raw3 %>%
 # Negative gepolte Items prüfen
 ## Recodieren der Psychologische Sicherheit Items
 ```{r}
-raw4 <- raw3 %>% 
+raw3a <- raw3 %>% 
   mutate(across(
     .cols = c(PS_03, PS_05, PS_06),
     .fns = ~ dplyr::recode(.,
@@ -90,12 +90,12 @@ raw4 <- raw3 %>%
                     `7` = 1)))
 ```
 
-# Recodieren des organisationalen Commitments
+## Recodieren des organisationalen Commitments
 ```{r}
-raw4 <- raw3 %>% 
+raw4 <- raw3a %>% 
   mutate(across(
-    .cols = c(OC_A02),
-    .fns = ~ dplyr::recode(.,
+    .cols = OC_A02,
+    .fns = ~dplyr::recode(.,
                     `1` = 5,
                     `2` = 4,
                     `3` = 3,
@@ -103,6 +103,11 @@ raw4 <- raw3 %>%
                     `5` = 1)))
 ```
 
+
+
+
+  > Wird aktuell nicht umkodiert!!!
+ 
 # Variablen umkodieren
 ```{r}
 raw4$Geschlecht <- as.numeric(raw4$Geschlecht)
