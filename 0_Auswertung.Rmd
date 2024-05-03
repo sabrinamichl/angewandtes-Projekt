@@ -21,13 +21,13 @@ conflicted::conflict_prefer("filter", "dplyr")
 # Vorbereitung der Daten
 ## Daten einlesen
 ```{r}
-d_raw <- read_excel("231201_Working_Data.xlsx")
+d_raw <- read_excel("Pre-Test.xlsx")
 ```
 
 ## Unnötige Variablen entfernen
 ```{r}
 raw1 <- d_raw %>% 
-  select(-c(CASE, SERIAL, REF, QUESTNNR, MODE, STARTED, TIME001:TIME016, TIME_SUM, LASTDATA, FINISHED, Q_VIEWER, LASTPAGE, MAXPAGE, MISSREL, MISSING, MAILSENT, TIME_RSI, SD10))
+  select(-c(CASE, SERIAL, REF, QUESTNNR, MODE, STARTED, TIME001:TIME008, LASTDATA, FINISHED, Q_VIEWER, LASTPAGE, MAXPAGE, MISSREL, MISSING, MAILSENT))
 ```
 
 ## Variablenbeschreibung (Zeile) entfernen
@@ -35,35 +35,66 @@ raw1 <- d_raw %>%
 raw1 = raw1[-1,]
 ```
 
-## Datensatz mit den Pflichtvariablen erstellen
-```{r}
-raw_pfl <- raw1 %>% 
-  select(-c(AZ01:AZ14, AZ33:AZ76))
-```
-
 ## Spaltennamen umbenennen
 ```{r}
-names(raw_pfl) <- c("AZ16", "AZ17", "AZ18", "AZ19", "AZ20", "AZ21", "AZ22", "AZ23", "AZ24", "AZ25", "AZ26", "AZ27", "AZ28", "AZ29", "AZ30", "AZ31", "MT01", "PE_B1", "PE_B2", "PE_B3", "PE_K1", "PE_K2", "PE_K3", "PE_S1", "PE_S2", "PE_S3", "PE_E1", "PE_E2", "PE_E3", "PS1", "PS2", "PS3", "PS4", "PS5", "PS6", "PS7", "gender", "consent", "age", "education", "leader", "expericene", "experience2", "job", "area", "comment", "honesty")
-```
-
-## Weitere Variablen rausschmeißen
-```{r}
-raw_pfl <- raw_pfl %>% 
-  select(-c(expericene, comment, MT01, consent, honesty))
+names(raw1) <- c("Alter", "Geschlecht", "Bildung", "Betriebszugehoerigkeit", "Beschaeftigungsart", "Arbeitszeitmodell", "Gehalt", "Position_im_Unternehmen", "Remotarbeit", "IS_K01", "IS_K02", "IS_K03", "IS_K04", "IS_E05", "IS_E06", "IS_E07", "IS_E08", "OC_A01", "OC_A02", "OC_A03", "OC_A04", "OC_A05", "CPE_C01", "CPE_C02", "CPE_C03", "CPE_C04", "CPE_I05", "CPE_I06", "CPE_I07", "CPE_I08", "CPE_M09", "CPE_M10", "CPE_M11", "CPE_M12", "CPE_E13", "CPE_E14", "CPE_E15", "CPE_E16", "PS_01", "PS_02", "PS_03", "PS_04", "PS_05", "PS_06", "PS_07", "QQ_01", "QQ_02", "QQ_03", "QQ_04", "QQ_05", "QQ_06", "QQ_07", "SL_01", "SL_02", "SL_03", "SL_04", "SL_05", "SL_06", "SL_07", "ZE01", "TIME_SUM", "TIME_RSI")
 ```
 
 ## ID-Spalte einfügen
 ```{r}
-raw_pfl <- raw_pfl %>% 
+raw2 <- raw1 %>% 
   mutate(ID = row_number()) %>% 
   select(ID, everything())
 ```
 
+## Variablenbeschreibung (Zeile) entfernen
+  > Vor allem Zeilen 1-3
+  
+```{r}
+drops <-c(1, 2, 3)
+```
+
+```{r}
+raw3 <- raw2[-drops,]
+```
+
+## ID-Spalten neu aufsetzen
+```{r}
+raw3 <- raw3 %>% 
+  select(-ID) %>% 
+  mutate(ID = row_number()) %>% 
+  select(ID, ZE01, everything())
+```
+
+## Kompletten Datensatz auf NA's prüfen
+```{r}
+raw3 %>% 
+  summarise(across(everything(), 
+                   ~sum(is.na(.))))
+```
+  > Keine NA's im Datensatz enthalten!
+  
+# Negative gepolte Items prüfen
 ## Recodieren der Psychologische Sicherheit Items
 ```{r}
-raw_pfl1 <- raw_pfl %>% 
+raw4 <- raw3 %>% 
   mutate(across(
-    .cols = c(PS3, PS5, PS6),
+    .cols = c(PS_03, PS_05, PS_06),
+    .fns = ~ dplyr::recode(.,
+                    `1` = 7,
+                    `2` = 6,
+                    `3` = 5,
+                    `4` = 4,
+                    `5` = 3,
+                    `6` = 2,
+                    `7` = 1)))
+```
+
+# Recodieren des organisationalen Commitments
+```{r}
+raw4 <- raw3 %>% 
+  mutate(across(
+    .cols = c(OC_A02),
     .fns = ~ dplyr::recode(.,
                     `1` = 7,
                     `2` = 6,
@@ -76,93 +107,175 @@ raw_pfl1 <- raw_pfl %>%
 
 # Variablen umkodieren
 ```{r}
-raw_pfl4$gender <- as.numeric(raw_pfl4$gender)
-raw_pfl4$age <- as.numeric(raw_pfl4$age)
-raw_pfl4$education <- as.numeric(raw_pfl4$education)
-raw_pfl4$leader <- as.numeric(raw_pfl4$leader)
-raw_pfl4$experience2 <- as.numeric(raw_pfl4$experience2)
+raw4$Geschlecht <- as.numeric(raw4$Geschlecht)
+raw4$Alter <- as.numeric(raw4$Alter)
+raw4$Bildung <- as.numeric(raw4$Bildung)
+raw4$Betriebszugehoerigkeit <- as.numeric(raw4$Betriebszugehoerigkeit)
+raw4$Arbeitszeitmodell <- as.numeric(raw4$Arbeitszeitmodell)
+raw4$Beschaeftigungsart <- as.numeric(raw4$Beschaeftigungsart)
+raw4$Gehalt <- as.numeric(raw4$Gehalt)
+raw4$Position_im_Unternehmen <- as.numeric(raw4$Position_im_Unternehmen)
+raw4$Remotarbeit <- as.numeric(raw4$Remotarbeit)
 ```
 
 ```{r}
-raw_pfl4$AZ16 <- as.numeric(raw_pfl4$AZ16)
-raw_pfl4$AZ17 <- as.numeric(raw_pfl4$AZ17)
-raw_pfl4$AZ18 <- as.numeric(raw_pfl4$AZ18)
-raw_pfl4$AZ19 <- as.numeric(raw_pfl4$AZ19)
-raw_pfl4$AZ20 <- as.numeric(raw_pfl4$AZ20)
-raw_pfl4$AZ21 <- as.numeric(raw_pfl4$AZ21)
-raw_pfl4$AZ22 <- as.numeric(raw_pfl4$AZ22)
-raw_pfl4$AZ23 <- as.numeric(raw_pfl4$AZ23)
-raw_pfl4$AZ24 <- as.numeric(raw_pfl4$AZ24)
-raw_pfl4$AZ25 <- as.numeric(raw_pfl4$AZ25)
-raw_pfl4$AZ26 <- as.numeric(raw_pfl4$AZ26)
-raw_pfl4$AZ27 <- as.numeric(raw_pfl4$AZ27)
-raw_pfl4$AZ28 <- as.numeric(raw_pfl4$AZ28)
-raw_pfl4$AZ29 <- as.numeric(raw_pfl4$AZ29)
-raw_pfl4$AZ30 <- as.numeric(raw_pfl4$AZ30)
-raw_pfl4$AZ31 <- as.numeric(raw_pfl4$AZ31)
+raw4$IS_K01 <- as.numeric(raw4$IS_K01)
+raw4$IS_K02 <- as.numeric(raw4$IS_K02)
+raw4$IS_K03 <- as.numeric(raw4$IS_K03)
+raw4$IS_K04 <- as.numeric(raw4$IS_K04)
+raw4$IS_E05 <- as.numeric(raw4$IS_E05)
+raw4$IS_E06 <- as.numeric(raw4$IS_E06)
+raw4$IS_E07 <- as.numeric(raw4$IS_E07)
+raw4$IS_E08 <- as.numeric(raw4$IS_E08)
 ```
 
 ```{r}
-raw_pfl4$PE_B1 <- as.numeric(raw_pfl4$PE_B1)
-raw_pfl4$PE_B2 <- as.numeric(raw_pfl4$PE_B2)
-raw_pfl4$PE_B3 <- as.numeric(raw_pfl4$PE_B3)
-raw_pfl4$PE_K1 <- as.numeric(raw_pfl4$PE_K1)
-raw_pfl4$PE_K2 <- as.numeric(raw_pfl4$PE_K2)
-raw_pfl4$PE_K3 <- as.numeric(raw_pfl4$PE_K3)
-raw_pfl4$PE_S1 <- as.numeric(raw_pfl4$PE_S1)
-raw_pfl4$PE_S2 <- as.numeric(raw_pfl4$PE_S2)
-raw_pfl4$PE_S3 <- as.numeric(raw_pfl4$PE_S3)
-raw_pfl4$PE_E1 <- as.numeric(raw_pfl4$PE_E1)
-raw_pfl4$PE_E2 <- as.numeric(raw_pfl4$PE_E2)
-raw_pfl4$PE_E3 <- as.numeric(raw_pfl4$PE_E3)
+raw4$OC_A01 <- as.numeric(raw4$OC_A01)
+raw4$OC_A02 <- as.numeric(raw4$OC_A02)
+raw4$OC_A03 <- as.numeric(raw4$OC_A03)
+raw4$OC_A04 <- as.numeric(raw4$OC_A04)
+raw4$OC_A05 <- as.numeric(raw4$OC_A05)
 ```
 
 ```{r}
-raw_pfl4$PS1 <- as.numeric(raw_pfl4$PS1)
-raw_pfl4$PS2 <- as.numeric(raw_pfl4$PS2)
-raw_pfl4$PS3 <- as.numeric(raw_pfl4$PS3)
-raw_pfl4$PS4 <- as.numeric(raw_pfl4$PS4)
-raw_pfl4$PS5 <- as.numeric(raw_pfl4$PS5)
-raw_pfl4$PS6 <- as.numeric(raw_pfl4$PS6)
-raw_pfl4$PS7 <- as.numeric(raw_pfl4$PS7)
+raw4$CPE_C01 <- as.numeric(raw4$CPE_C01)
+raw4$CPE_C02 <- as.numeric(raw4$CPE_C02)
+raw4$CPE_C03 <- as.numeric(raw4$CPE_C03)
+raw4$CPE_C04 <- as.numeric(raw4$CPE_C04)
+raw4$CPE_I05 <- as.numeric(raw4$CPE_I05)
+raw4$CPE_I06 <- as.numeric(raw4$CPE_I06)
+raw4$CPE_I07 <- as.numeric(raw4$CPE_I07)
+raw4$CPE_I08 <- as.numeric(raw4$CPE_I08)
+raw4$CPE_M09 <- as.numeric(raw4$CPE_M09)
+raw4$CPE_M10 <- as.numeric(raw4$CPE_M10)
+raw4$CPE_M11 <- as.numeric(raw4$CPE_M11)
+raw4$CPE_M12 <- as.numeric(raw4$CPE_M12)
+raw4$CPE_E13 <- as.numeric(raw4$CPE_E13)
+raw4$CPE_E14 <- as.numeric(raw4$CPE_E14)
+raw4$CPE_E15 <- as.numeric(raw4$CPE_E15)
+raw4$CPE_E16 <- as.numeric(raw4$CPE_E16)
 ```
 
 ```{r}
-raw_pfl4$job <- as.numeric(raw_pfl4$job)
-```
-
-## Geschlecht umkodieren
-```{r}
-raw_pfl4 %>% 
-  count(gender)
+raw4$PS_01 <- as.numeric(raw4$PS_01)
+raw4$PS_02 <- as.numeric(raw4$PS_02)
+raw4$PS_03 <- as.numeric(raw4$PS_03)
+raw4$PS_04 <- as.numeric(raw4$PS_04)
+raw4$PS_05 <- as.numeric(raw4$PS_05)
+raw4$PS_06 <- as.numeric(raw4$PS_06)
+raw4$PS_07 <- as.numeric(raw4$PS_07)
 ```
 
 
 ```{r}
-raw_pfl4 <- raw_pfl4 %>% 
-  mutate(gender_f = case_when(
-    gender == -2 ~ 1,
-    gender == -1 ~ 0)) %>% 
-  select(-gender)
-```
-
-## Führungsposition umkodieren
-```{r}
-raw_pfl4 %>% 
-  count(leader)
+raw4$QQ_01 <- as.numeric(raw4$QQ_01)
+raw4$QQ_02 <- as.numeric(raw4$QQ_02)
+raw4$QQ_03 <- as.numeric(raw4$QQ_03)
+raw4$QQ_04 <- as.numeric(raw4$QQ_04)
+raw4$QQ_05 <- as.numeric(raw4$QQ_05)
+raw4$QQ_06 <- as.numeric(raw4$QQ_06)
+raw4$QQ_07 <- as.numeric(raw4$QQ_07)
 ```
 
 ```{r}
-raw_pfl4 <- raw_pfl4 %>% 
-  mutate(leader_yes = case_when(
-    leader == 1 ~ 1,
-    leader == 2 ~ 0
-  )) %>% 
-  select(-leader)
+raw4$SL_01 <- as.numeric(raw4$SL_01)
+raw4$SL_02 <- as.numeric(raw4$SL_02)
+raw4$SL_03 <- as.numeric(raw4$SL_03)
+raw4$SL_04 <- as.numeric(raw4$SL_04)
+raw4$SL_05 <- as.numeric(raw4$SL_05)
+raw4$SL_06 <- as.numeric(raw4$SL_06)
+raw4$SL_07 <- as.numeric(raw4$SL_07)
 ```
+
+```{r}
+raw4$ZE01 <- as.numeric(raw4$ZE01)
+raw4$TIME_SUM <- as.numeric(raw4$TIME_SUM)
+raw4$TIME_RSI <- as.numeric(raw4$TIME_RSI)
+```
+
 
 # Überblick über die Daten
 ```{r}
-skim(raw_pfl4)
+skim(raw4)
 ```
+
+# Skalen zusammenfassen
+## Irriation (IS)
+```{r}
+d_work <- raw4
+d_work$IS_mean <- rowMeans(subset(raw4, select = c(IS_K01, IS_K02, IS_K03, IS_K04, IS_E05, IS_E06, IS_E07, IS_E08)))
+d_work$IS_K_mean <- rowMeans(subset(raw4, select = c(IS_K01, IS_K02, IS_K03, IS_K04)))
+d_work$IS_E_mean <- rowMeans(subset(raw4, select = c(IS_E05, IS_E06, IS_E07, IS_E08)))
+```
+
+## Kultur für psychologisches Empowerment in Organisationen (CPE)
+```{r}
+d_work$CPE_mean <- rowMeans(subset(raw4, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04, CPE_I05, CPE_I06, CPE_I07, CPE_I08, CPE_M09, CPE_M10, CPE_M11, CPE_M12, CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
+d_work$CPE_C_mean <- rowMeans(subset(raw4, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04)))
+d_work$CPE_I_mean <- rowMeans(subset(raw4, select = c(CPE_I05, CPE_I06, CPE_I07, CPE_I08)))
+d_work$CPE_M_mean <- rowMeans(subset(raw4, select = c(CPE_M09, CPE_M10, CPE_M11, CPE_M12)))
+d_work$CPE_E_mean <- rowMeans(subset(raw4, select = c(CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
+```
+
+## Psychologische Sicherheit (PS)
+```{r}
+d_work$PS_mean <- rowMeans(subset(raw4, select = c(PS_01, PS_02, PS_03, PS_04, PS_05, PS_06, PS_07)))
+```
+
+## Organisationelles Commitment (OCA)
+```{r}
+d_work$OC_A_mean <- rowMeans(subset(raw4, select = c(OC_A01, OC_A02, OC_A03, OC_A04, OC_A05)))
+```
+
+## Quiet Quitting
+```{r}
+d_work$QQ_mean <- rowMeans(subset(raw4, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07)))
+```
+
+## Servant Leadership
+```{r}
+d_work$SL_mean <- rowMeans(subset(raw4, select = c(SL_01, SL_02, SL_03, SL_04, SL_05, SL_06, SL_07)))
+```
+
+## Einzelne Items aus dem Datensatz entfernen
+```{r}
+d_work_s <- d_work %>% 
+  select(-c(IS_K01:IS_E08, OC_A01:OC_A05, CPE_C01:CPE_E16, PS_01:PS_07, QQ_01:QQ_07, SL_01:SL_07)) %>% 
+  select(ID, everything())
+```
+
+
+# Cronbachs Alpha berechnen
+## Irritation
+```{r}
+psych::alpha(subset(d_work, select=c(IS_K01:IS_E08), check.keys=TRUE))
+```
+
+## CPE
+```{r}
+psych::alpha(subset(d_work, select=c(CPE_C01:CPE_E16), check.keys=TRUE))
+```
+
+## PS
+```{r}
+psych::alpha(subset(d_work, select=c(PS_01:PS_07), check.keys=TRUE))
+```
+
+## OCA
+```{r}
+psych::alpha(subset(d_work, select=c(OC_A01:OC_A05), check.keys=TRUE))
+```
+
+## QQ
+```{r}
+psych::alpha(subset(d_work, select=c(QQ_01:QQ_07), check.keys=TRUE))
+```
+
+## SL
+```{r}
+psych::alpha(subset(d_work, select=c(SL_01:SL_07), check.keys=TRUE))
+```
+
+
+
 
