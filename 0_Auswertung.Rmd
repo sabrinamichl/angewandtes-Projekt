@@ -250,22 +250,22 @@ d_work_s <- d_work %>%
 # Cronbachs Alpha berechnen
 ## Irritation
 ```{r}
-psych::alpha(subset(d_work, select=c(IS_K01:IS_E08), check.keys=TRUE))
+psych::alpha(subset(d_work, select=c(IS_K01:IS_E08)), check.keys=TRUE)
 ```
 
 ## CPE
 ```{r}
-psych::alpha(subset(d_work, select=c(CPE_C01:CPE_E16), check.keys=TRUE))
+psych::alpha(subset(d_work, select=c(CPE_C01:CPE_E16)), check.keys=TRUE)
 ```
 
 ## PS
 ```{r}
-psych::alpha(subset(d_work, select=c(PS_01:PS_07), check.keys=TRUE))
+psych::alpha(subset(d_work, select=c(PS_01:PS_07)), check.keys=TRUE)
 ```
 
 ## OCA
 ```{r}
-psych::alpha(subset(d_work, select=c(OC_A01:OC_A05), check.keys=TRUE))
+psych::alpha(subset(d_work, select=c(OC_A01:OC_A05)), check.keys=TRUE)
 ```
 
 ## QQ
@@ -273,10 +273,25 @@ psych::alpha(subset(d_work, select=c(OC_A01:OC_A05), check.keys=TRUE))
 psych::alpha(subset(d_work, select=c(QQ_01:QQ_07), check.keys=TRUE))
 ```
 
+```{r}
+psych::alpha(x=subset(d_work, select=c(QQ_01:QQ_07)), check.keys=TRUE)
+```
+
+
+```{r}
+subset_cor <- subset(d_work,
+                     select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07))
+```
+
+```{r}
+library(apaTables)
+apa.cor.table(subset_cor, filename = "corrrrr.doc", table.number = 2)
+```
+
 
 ## SL
 ```{r}
-psych::alpha(subset(d_work, select=c(SL_01:SL_07), check.keys=TRUE))
+psych::alpha(subset(d_work, select=c(SL_01:SL_07)), check.keys=TRUE)
 ```
 
 
