@@ -273,6 +273,7 @@ psych::alpha(subset(d_work, select=c(OC_A01:OC_A05)), check.keys=TRUE)
 psych::alpha(subset(d_work, select=c(QQ_01:QQ_07), check.keys=TRUE))
  ```
 
+ 
 ```{r}
 psych::alpha(x=subset(d_work, select=c(QQ_01:QQ_07)), check.keys=TRUE)
 ```
