@@ -271,7 +271,7 @@ psych::alpha(subset(d_work, select=c(OC_A01:OC_A05)), check.keys=TRUE)
 ## QQ
 ```{r}
 psych::alpha(subset(d_work, select=c(QQ_01:QQ_07), check.keys=TRUE))
-```
+ ```
 
 ```{r}
 psych::alpha(x=subset(d_work, select=c(QQ_01:QQ_07)), check.keys=TRUE)
@@ -294,6 +294,28 @@ apa.cor.table(subset_cor, filename = "corrrrr.doc", table.number = 2)
 psych::alpha(subset(d_work, select=c(SL_01:SL_07)), check.keys=TRUE)
 ```
 
+# Korrelationen zwischen den Skalen
 
+```{r}
+d_work_s1 <- d_work_s %>% 
+  select(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_mean, SL_mean)
+```
+
+```{r}
+d_work_s1 %>% 
+  select(where(is.numeric)) %>% 
+  correlate() %>% 
+  shave()
+```
+
+```{r}
+subset_cor <- subset(d_work,
+                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_mean, SL_mean))
+```
+
+```{r}
+library(apaTables)
+apa.cor.table(subset_cor, filename = "corr-com.doc", table.number = 2)
+```
 
 
