@@ -21,13 +21,13 @@ conflicted::conflict_prefer("filter", "dplyr")
 # Vorbereitung der Daten
 ## Daten einlesen
 ```{r}
-d_raw <- read_excel("Pre-Test.xlsx")
+d_raw <- read_excel("Pre-Test-Test.xlsx")
 ```
 
 ## Unnötige Variablen entfernen
 ```{r}
 raw1 <- d_raw %>% 
-  select(-c(CASE, SERIAL, REF, QUESTNNR, MODE, STARTED, TIME001:TIME008, LASTDATA, FINISHED, Q_VIEWER, LASTPAGE, MAXPAGE, MISSREL, MISSING, MAILSENT))
+  select(-c(CASE, SERIAL, REF, QUESTNNR, MODE, STARTED, TIME001:TIME012, LASTDATA, FINISHED, Q_VIEWER, LASTPAGE, MAXPAGE, MISSREL, MISSING, MAILSENT))
 ```
 
 ## Variablenbeschreibung (Zeile) entfernen
@@ -35,9 +35,10 @@ raw1 <- d_raw %>%
 raw1 = raw1[-1,]
 ```
 
+
 ## Spaltennamen umbenennen
 ```{r}
-names(raw1) <- c("Alter", "Geschlecht", "Bildung", "Betriebszugehoerigkeit", "Beschaeftigungsart", "Arbeitszeitmodell", "Gehalt", "Position_im_Unternehmen", "Remotarbeit", "IS_K01", "IS_K02", "IS_K03", "IS_K04", "IS_E05", "IS_E06", "IS_E07", "IS_E08", "OC_A01", "OC_A02", "OC_A03", "OC_A04", "OC_A05", "CPE_C01", "CPE_C02", "CPE_C03", "CPE_C04", "CPE_I05", "CPE_I06", "CPE_I07", "CPE_I08", "CPE_M09", "CPE_M10", "CPE_M11", "CPE_M12", "CPE_E13", "CPE_E14", "CPE_E15", "CPE_E16", "PS_01", "PS_02", "PS_03", "PS_04", "PS_05", "PS_06", "PS_07", "QQ_01", "QQ_02", "QQ_03", "QQ_04", "QQ_05", "QQ_06", "QQ_07", "SL_01", "SL_02", "SL_03", "SL_04", "SL_05", "SL_06", "SL_07", "ZE01", "TIME_SUM", "TIME_RSI")
+names(raw1) <- c("Alter", "Geschlecht", "Bildung", "Bildung_sonstig", "BZG_J", "BZG_M", "Beschaeftigungsart", "Arbeitszeitmodell", "Gehalt", "Position_im_Unternehmen", "Remotarbeit", "IS_K01", "IS_K02", "IS_K03", "IS_K04", "IS_E05", "IS_E06", "IS_E07", "IS_E08", "OC_A01", "OC_A02", "OC_A03", "OC_A04", "OC_A05", "CPE_C01", "CPE_C02", "CPE_C03", "CPE_C04", "CPE_I05", "CPE_I06", "CPE_I07", "CPE_I08", "CPE_M09", "CPE_M10", "CPE_M11", "CPE_M12", "CPE_E13", "CPE_E14", "CPE_E15", "CPE_E16", "PS_01", "PS_02", "PS_03", "PS_04", "PS_05", "PS_06", "PS_07", "QQ_01", "QQ_02", "QQ_03", "QQ_04", "QQ_05", "QQ_06", "QQ_07", "QQ_N08", "QQ_N09", "QQ_N10", "QQ_N11", "QQ_N12", "QQ_N13", "QQ_N14", "SL_01", "SL_02", "SL_03", "SL_04", "SL_05", "SL_06", "SL_07", "ZE01", "ZE04", "TIME_SUM", "TIME_RSI")
 ```
 
 ## ID-Spalte einfügen
@@ -102,10 +103,6 @@ raw4 <- raw3a %>%
                     `4` = 2,
                     `5` = 1)))
 ```
-
-
-
-
   > Wird aktuell nicht umkodiert!!!
  
 # Variablen umkodieren
