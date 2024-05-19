@@ -21,13 +21,13 @@ conflicted::conflict_prefer("filter", "dplyr")
 # Vorbereitung der Daten
 ## Daten einlesen
 ```{r}
-d_raw <- read_excel("Pre-Test-Test.xlsx")
+d_raw <- read_excel("raw_data.xlsx")
 ```
 
 ## Unnötige Variablen entfernen
 ```{r}
 raw1 <- d_raw %>% 
-  select(-c(CASE, SERIAL, REF, QUESTNNR, MODE, STARTED, TIME001:TIME012, LASTDATA, FINISHED, Q_VIEWER, LASTPAGE, MAXPAGE, MISSREL, MISSING, MAILSENT))
+  select(-c(CASE, SERIAL, REF, QUESTNNR, MODE, STARTED, TIME001:TIME012, MAILSENT, LASTDATA, FINISHED, Q_VIEWER, LASTPAGE, MAXPAGE, MISSREL, MISSING))
 ```
 
 ## Variablenbeschreibung (Zeile) entfernen
@@ -48,28 +48,10 @@ raw2 <- raw1 %>%
   select(ID, everything())
 ```
 
-## Variablenbeschreibung (Zeile) entfernen
-  > Vor allem Zeilen 1-3
-  
-```{r}
-drops <-c(1, 2, 3)
-```
-
-```{r}
-raw3 <- raw2[-drops,]
-```
-
-## ID-Spalten neu aufsetzen
-```{r}
-raw3 <- raw3 %>% 
-  select(-ID) %>% 
-  mutate(ID = row_number()) %>% 
-  select(ID, ZE01, everything())
-```
 
 ## Kompletten Datensatz auf NA's prüfen
 ```{r}
-raw3 %>% 
+raw2 %>% 
   summarise(across(everything(), 
                    ~sum(is.na(.))))
 ```
@@ -78,7 +60,7 @@ raw3 %>%
 # Negative gepolte Items prüfen
 ## Recodieren der Psychologische Sicherheit Items
 ```{r}
-raw3a <- raw3 %>% 
+raw3 <- raw2 %>% 
   mutate(across(
     .cols = c(PS_03, PS_05, PS_06),
     .fns = ~ dplyr::recode(.,
@@ -93,7 +75,7 @@ raw3a <- raw3 %>%
 
 ## Recodieren des organisationalen Commitments
 ```{r}
-raw4 <- raw3a %>% 
+raw4 <- raw3 %>% 
   mutate(across(
     .cols = OC_A02,
     .fns = ~dplyr::recode(.,
@@ -110,7 +92,8 @@ raw4 <- raw3a %>%
 raw4$Geschlecht <- as.numeric(raw4$Geschlecht)
 raw4$Alter <- as.numeric(raw4$Alter)
 raw4$Bildung <- as.numeric(raw4$Bildung)
-raw4$Betriebszugehoerigkeit <- as.numeric(raw4$Betriebszugehoerigkeit)
+raw4$BZG_J <- as.numeric(raw4$BZG_J)
+raw4$BZG_M <- as.numeric(raw4$BZG_M)
 raw4$Arbeitszeitmodell <- as.numeric(raw4$Arbeitszeitmodell)
 raw4$Beschaeftigungsart <- as.numeric(raw4$Beschaeftigungsart)
 raw4$Gehalt <- as.numeric(raw4$Gehalt)
@@ -177,6 +160,16 @@ raw4$QQ_07 <- as.numeric(raw4$QQ_07)
 ```
 
 ```{r}
+raw4$QQ_N08 <- as.numeric(raw4$QQ_N08)
+raw4$QQ_N09 <- as.numeric(raw4$QQ_N09)
+raw4$QQ_N10 <- as.numeric(raw4$QQ_N10)
+raw4$QQ_N11 <- as.numeric(raw4$QQ_N11)
+raw4$QQ_N12 <- as.numeric(raw4$QQ_N12)
+raw4$QQ_N13 <- as.numeric(raw4$QQ_N13)
+raw4$QQ_N14 <- as.numeric(raw4$QQ_N14)
+```
+
+```{r}
 raw4$SL_01 <- as.numeric(raw4$SL_01)
 raw4$SL_02 <- as.numeric(raw4$SL_02)
 raw4$SL_03 <- as.numeric(raw4$SL_03)
@@ -188,8 +181,149 @@ raw4$SL_07 <- as.numeric(raw4$SL_07)
 
 ```{r}
 raw4$ZE01 <- as.numeric(raw4$ZE01)
+raw4$ZE04 <- as.numeric(raw4$ZE04)
 raw4$TIME_SUM <- as.numeric(raw4$TIME_SUM)
 raw4$TIME_RSI <- as.numeric(raw4$TIME_RSI)
+```
+
+
+# `BZG_J` und `BZG_M` zusammenrechnen
+```{r}
+raw4a <- raw4 %>% 
+  mutate(BZG_JM = (BZG_J*12)) %>% 
+  mutate(BZG = (BZG_JM+BZG_M)/12) %>% 
+  select(-c(BZG_J, BZG_M, BZG_JM))
+```
+
+# Bearbeitungszeit genauer betrachten
+```{r}
+raw4a %>% 
+  select(TIME_SUM) %>% 
+  mutate(TIME_SUM = TIME_SUM/60) %>% 
+  summarise(mean(TIME_SUM),
+            sd(TIME_SUM))
+```
+ >> Die Probanden benötigen im Mittel 9 Minuten zum Ausfüllen mit einer Standardabweichung von 2.65 Minuten
+ 
+# Verteilungen der Soziodemografika
+## Geschlecht
+```{r}
+raw4a %>% 
+  count(Geschlecht) %>% 
+  mutate(prob = n/sum(n)) %>%
+  round(2)
+```
+
+## Alter
+```{r}
+raw4a %>% 
+  summarise(mean(Alter, na.rm=TRUE),
+         sd(Alter, na.rm=TRUE), 
+         max(Alter, na.rm =TRUE),
+         min(Alter, na.rm=TRUE))
+```
+
+### visuelle Darstellung des Alters
+```{r}
+raw4a %>% 
+  ggplot()+
+  aes(x=Alter)+
+  geom_histogram(fill = "bisque3")+
+  geom_vline(xintercept=36.25 , color="thistle2", size=2)+
+  geom_vline(xintercept=49,60016, color="turquoise1", size=1)+
+  geom_vline(xintercept=22,99984, color="turquoise1", size=1)+
+  theme_minimal()
+```
+
+
+## Bildung
+```{r}
+raw4a %>% 
+  count(Bildung) %>% 
+  mutate(prob = n/sum(n)) %>% 
+  round(2)
+```
+
+### Visuelle Darstellung der Bildung
+```{r}
+raw4a %>% 
+  ggplot()+
+  aes(x=Bildung)+
+  geom_histogram(fill = "bisque3")+
+  theme_minimal()
+```
+
+
+## Arbitszeitmodell
+```{r}
+raw4a %>% 
+  count(Arbeitszeitmodell) %>% 
+  mutate(mean(Arbeitszeitmodell, na.rm=TRUE),
+         sd(Arbeitszeitmodell, na.rm=TRUE),
+         prob = n/sum(n)) %>% 
+  round(2)
+```
+
+### Visuelle Darstellung der verschiedenen Arbeitsmodelle
+```{r}
+raw4a %>% 
+  ggplot()+
+  aes(x=Arbeitszeitmodell)+
+  geom_histogram(fill = "bisque3")+
+  theme_minimal()
+```
+
+
+## Gehalt
+```{r}
+raw4a %>% 
+  count(Gehalt) %>% 
+  mutate(prob = n/sum(n)) %>% 
+  round(2)
+```
+
+### Visuelle Darstellung des Gehalts
+```{r}
+raw4a %>% 
+  ggplot()+
+  aes(x=Gehalt)+
+  geom_histogram(fill = "bisque3")+
+  theme_minimal()
+```
+
+## Position im Unternehmen
+```{r}
+raw4a %>% 
+  count(Position_im_Unternehmen) %>% 
+  mutate(prob = n/sum(n)) %>% 
+  round(2)
+```
+
+### Visuelle Darstellung der Position im Unternehmen
+```{r}
+raw4a %>% 
+  ggplot()+
+  aes(x=Position_im_Unternehmen)+
+  geom_histogram(fill = "bisque3")+
+  theme_minimal()
+```
+
+
+## Remotearbeit
+```{r}
+raw4a %>% 
+  count(Remotarbeit) %>% 
+  mutate(prob = n/sum(n)) %>% 
+  round(2)
+```
+
+### Visuelle Darstellung der Remotearbeit
+```{r}
+raw4a %>% 
+  ggplot()+
+  aes(x=Remotarbeit)+
+  geom_bar(fill = "bisque3")+
+  theme_minimal()
 ```
 
 
@@ -198,42 +332,51 @@ raw4$TIME_RSI <- as.numeric(raw4$TIME_RSI)
 skim(raw4)
 ```
 
+# Kurzen Datensatz `raw` abspeichern
+```{r}
+write.csv(raw4, file="raw4.csv")
+```
+
+
 # Skalen zusammenfassen
 ## Irriation (IS)
 ```{r}
-d_work <- raw4
-d_work$IS_mean <- rowMeans(subset(raw4, select = c(IS_K01, IS_K02, IS_K03, IS_K04, IS_E05, IS_E06, IS_E07, IS_E08)))
-d_work$IS_K_mean <- rowMeans(subset(raw4, select = c(IS_K01, IS_K02, IS_K03, IS_K04)))
-d_work$IS_E_mean <- rowMeans(subset(raw4, select = c(IS_E05, IS_E06, IS_E07, IS_E08)))
+d_work <- raw4a
+d_work$IS_mean <- rowMeans(subset(raw4a, select = c(IS_K01, IS_K02, IS_K03, IS_K04, IS_E05, IS_E06, IS_E07, IS_E08)))
+d_work$IS_K_mean <- rowMeans(subset(raw4a, select = c(IS_K01, IS_K02, IS_K03, IS_K04)))
+d_work$IS_E_mean <- rowMeans(subset(raw4a, select = c(IS_E05, IS_E06, IS_E07, IS_E08)))
 ```
 
 ## Kultur für psychologisches Empowerment in Organisationen (CPE)
 ```{r}
 d_work$CPE_mean <- rowMeans(subset(raw4, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04, CPE_I05, CPE_I06, CPE_I07, CPE_I08, CPE_M09, CPE_M10, CPE_M11, CPE_M12, CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
-d_work$CPE_C_mean <- rowMeans(subset(raw4, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04)))
-d_work$CPE_I_mean <- rowMeans(subset(raw4, select = c(CPE_I05, CPE_I06, CPE_I07, CPE_I08)))
-d_work$CPE_M_mean <- rowMeans(subset(raw4, select = c(CPE_M09, CPE_M10, CPE_M11, CPE_M12)))
-d_work$CPE_E_mean <- rowMeans(subset(raw4, select = c(CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
+d_work$CPE_C_mean <- rowMeans(subset(raw4a, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04)))
+d_work$CPE_I_mean <- rowMeans(subset(raw4a, select = c(CPE_I05, CPE_I06, CPE_I07, CPE_I08)))
+d_work$CPE_M_mean <- rowMeans(subset(raw4a, select = c(CPE_M09, CPE_M10, CPE_M11, CPE_M12)))
+d_work$CPE_E_mean <- rowMeans(subset(raw4a, select = c(CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
 ```
 
 ## Psychologische Sicherheit (PS)
 ```{r}
-d_work$PS_mean <- rowMeans(subset(raw4, select = c(PS_01, PS_02, PS_03, PS_04, PS_05, PS_06, PS_07)))
+d_work$PS_mean <- rowMeans(subset(raw4a, select = c(PS_01, PS_02, PS_03, PS_04, PS_05, PS_06, PS_07)))
 ```
 
 ## Organisationelles Commitment (OCA)
 ```{r}
-d_work$OC_A_mean <- rowMeans(subset(raw4, select = c(OC_A01, OC_A02, OC_A03, OC_A04, OC_A05)))
+d_work$OC_A_mean <- rowMeans(subset(raw4a, select = c(OC_A01, OC_A02, OC_A03, OC_A04, OC_A05)))
 ```
 
 ## Quiet Quitting
 ```{r}
-d_work$QQ_mean <- rowMeans(subset(raw4, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07)))
+d_work$QQ_Anand_mean <- rowMeans(subset(raw4a, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07)))
+d_work$QQ_Eigene_mean <- rowMeans(subset(raw4a, select = c(QQ_N08, QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14)))
+d_work$QQ_Gesamt_mean <- rowMeans(subset(raw4a, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07, QQ_N08, QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14)))
 ```
+
 
 ## Servant Leadership
 ```{r}
-d_work$SL_mean <- rowMeans(subset(raw4, select = c(SL_01, SL_02, SL_03, SL_04, SL_05, SL_06, SL_07)))
+d_work$SL_mean <- rowMeans(subset(raw4a, select = c(SL_01, SL_02, SL_03, SL_04, SL_05, SL_06, SL_07)))
 ```
 
 ## Einzelne Items aus dem Datensatz entfernen
@@ -243,6 +386,10 @@ d_work_s <- d_work %>%
   select(ID, everything())
 ```
 
+# Kurzen Datensatz `d_work` abspeichern
+```{r}
+write.csv(d_work_s, file="d_work_s.csv")
+```
 
 # Cronbachs Alpha berechnen
 ## Irritation
@@ -266,19 +413,24 @@ psych::alpha(subset(d_work, select=c(OC_A01:OC_A05)), check.keys=TRUE)
 ```
 
 ## QQ
+## QQ (Anand)
 ```{r}
 psych::alpha(subset(d_work, select=c(QQ_01:QQ_07), check.keys=TRUE))
- ```
-
- 
-```{r}
-psych::alpha(x=subset(d_work, select=c(QQ_01:QQ_07)), check.keys=TRUE)
 ```
 
+### QQ-Neu
+```{r}
+psych::alpha(subset(d_work, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
+```
+
+### QQ-Gesamt
+```{r}
+psych::alpha(subset(d_work, select=c(QQ_01:QQ_N14), check.keys=TRUE))
+```
 
 ```{r}
 subset_cor <- subset(d_work,
-                     select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07))
+                     select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07, QQ_N08, QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14))
 ```
 
 ```{r}
@@ -293,7 +445,6 @@ psych::alpha(subset(d_work, select=c(SL_01:SL_07)), check.keys=TRUE)
 ```
 
 # Korrelationen zwischen den Skalen
-
 ```{r}
 d_work_s1 <- d_work_s %>% 
   select(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_mean, SL_mean)
@@ -308,7 +459,7 @@ d_work_s1 %>%
 
 ```{r}
 subset_cor <- subset(d_work,
-                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_mean, SL_mean))
+                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anhand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
 ```{r}
