@@ -7,6 +7,7 @@ library(rstanarm)
 library(bayestestR)
 library(bayesplot)
 library(tidymodels)
+library(corrplot)
 ```
 
 ```{r}
@@ -18,7 +19,7 @@ conflicted::conflict_prefer("select", "dplyr")
 conflicted::conflict_prefer("filter", "dplyr")
 ```
 
-# Vorbereitung der Daten
+# 1. Vorbereitung der Daten
 ## Daten einlesen
 ```{r}
 d_raw <- read_excel("raw_data.xlsx")
@@ -55,9 +56,14 @@ raw2 %>%
   summarise(across(everything(), 
                    ~sum(is.na(.))))
 ```
-  > Keine NA's im Datensatz enthalten!
-  
-# Negative gepolte Items prüfen
+
+```{r}
+skim(raw2)
+```
+  > NA bei CPE_M11 & SL_05 --> später prüfen, wenn Werte numerisch sind! (vgl. 4.!)
+
+
+# 2. Negative gepolte Items prüfen
 ## Recodieren der Psychologische Sicherheit Items
 ```{r}
 raw3 <- raw2 %>% 
@@ -87,7 +93,7 @@ raw4 <- raw3 %>%
 ```
   > Wird aktuell nicht umkodiert!!!
  
-# Variablen umkodieren
+# 3. Variablen umkodieren
 ```{r}
 raw4$Geschlecht <- as.numeric(raw4$Geschlecht)
 raw4$Alter <- as.numeric(raw4$Alter)
@@ -186,8 +192,38 @@ raw4$TIME_SUM <- as.numeric(raw4$TIME_SUM)
 raw4$TIME_RSI <- as.numeric(raw4$TIME_RSI)
 ```
 
+# 4. Mittelwerte der jeweiligen Items mit NA's anschauen
+```{r}
+raw4 %>% 
+  summarise(mean_CPE_M11 = mean(CPE_M11, na.rm = TRUE),
+            mean_SL_05 = mean(SL_05, na.rm=TRUE))
+```
 
-# `BZG_J` und `BZG_M` zusammenrechnen
+## Spalten mit NA's heraussuchen
+```{r}
+raw4 %>% 
+  filter(is.na(CPE_M11))
+```
+
+```{r}
+raw4 %>% 
+  filter(is.na(SL_05))
+```
+  > Eine Person (ID = 61) hat also weder eine Angabe zu CPE_M11 und SL_05 gemacht! Da ansonsten alle Werte vorhanden sind, werden diese NA's durch die Mittelwerte ausgetauscht!
+  
+### Austauschen der Werte
+```{r}
+raw4$CPE_M11[61] <- 4.63
+raw4$SL_05[61] <-3.37
+```
+
+### NA's checken
+```{r}
+skim(raw4)
+```
+
+
+# 5. `BZG_J` und `BZG_M` zusammenrechnen
 ```{r}
 raw4a <- raw4 %>% 
   mutate(BZG_JM = (BZG_J*12)) %>% 
@@ -205,7 +241,7 @@ raw4a %>%
 ```
  >> Die Probanden benötigen im Mittel 9 Minuten zum Ausfüllen mit einer Standardabweichung von 2.65 Minuten
  
-# Verteilungen der Soziodemografika
+# 6. Verteilungen der Soziodemografika
 ## Geschlecht
 ```{r}
 raw4a %>% 
@@ -327,18 +363,12 @@ raw4a %>%
 ```
 
 
-# Überblick über die Daten
-```{r}
-skim(raw4)
-```
-
-# Kurzen Datensatz `raw` abspeichern
+# 7. Kurzen Datensatz `raw` abspeichern
 ```{r}
 write.csv(raw4, file="raw4.csv")
 ```
 
-
-# Skalen zusammenfassen
+# 8. Skalen zusammenfassen
 ## Irriation (IS)
 ```{r}
 d_work <- raw4a
@@ -373,7 +403,6 @@ d_work$QQ_Eigene_mean <- rowMeans(subset(raw4a, select = c(QQ_N08, QQ_N09, QQ_N1
 d_work$QQ_Gesamt_mean <- rowMeans(subset(raw4a, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07, QQ_N08, QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14)))
 ```
 
-
 ## Servant Leadership
 ```{r}
 d_work$SL_mean <- rowMeans(subset(raw4a, select = c(SL_01, SL_02, SL_03, SL_04, SL_05, SL_06, SL_07)))
@@ -382,16 +411,16 @@ d_work$SL_mean <- rowMeans(subset(raw4a, select = c(SL_01, SL_02, SL_03, SL_04, 
 ## Einzelne Items aus dem Datensatz entfernen
 ```{r}
 d_work_s <- d_work %>% 
-  select(-c(IS_K01:IS_E08, OC_A01:OC_A05, CPE_C01:CPE_E16, PS_01:PS_07, QQ_01:QQ_07, SL_01:SL_07)) %>% 
+  select(-c(IS_K01:IS_E08, OC_A01:OC_A05, CPE_C01:CPE_E16, PS_01:PS_07, QQ_01:QQ_07, QQ_N08:QQ_N14, SL_01:SL_07, TIME_SUM, TIME_RSI)) %>% 
   select(ID, everything())
 ```
 
-# Kurzen Datensatz `d_work` abspeichern
+# 9. Kurzen Datensatz `d_work` abspeichern
 ```{r}
 write.csv(d_work_s, file="d_work_s.csv")
 ```
 
-# Cronbachs Alpha berechnen
+# 10. Cronbachs Alpha berechnen
 ## Irritation
 ```{r}
 psych::alpha(subset(d_work, select=c(IS_K01:IS_E08)), check.keys=TRUE)
@@ -428,26 +457,15 @@ psych::alpha(subset(d_work, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
 psych::alpha(subset(d_work, select=c(QQ_01:QQ_N14), check.keys=TRUE))
 ```
 
-```{r}
-subset_cor <- subset(d_work,
-                     select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07, QQ_N08, QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14))
-```
-
-```{r}
-library(apaTables)
-apa.cor.table(subset_cor, filename = "corrrrr.doc", table.number = 2)
-```
-
-
 ## SL
 ```{r}
 psych::alpha(subset(d_work, select=c(SL_01:SL_07)), check.keys=TRUE)
 ```
 
-# Korrelationen zwischen den Skalen
+# 11. Korrelationen zwischen den Skalen
 ```{r}
 d_work_s1 <- d_work_s %>% 
-  select(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_mean, SL_mean)
+  select(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean)
 ```
 
 ```{r}
@@ -459,12 +477,18 @@ d_work_s1 %>%
 
 ```{r}
 subset_cor <- subset(d_work,
-                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anhand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
+                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
 ```{r}
 library(apaTables)
 apa.cor.table(subset_cor, filename = "corr-com.doc", table.number = 2)
+```
+
+```{r}
+M = cor(subset_cor)
+M
+corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ```
 
 
