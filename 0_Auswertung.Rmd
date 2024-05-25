@@ -491,4 +491,49 @@ M
 corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ```
 
+# 12. Überprüfung der Hypothesen
+## PE moderiert den Zusammenhang von OCA und QQ-Gesamt
+```{r}
+d_work_plot_lm<- d_work_s %>% 
+  mutate(CPE = case_when(
+    CPE_mean <= 3.99 ~ "CPE_no",
+    CPE_mean > 3.99 & CPE_mean < 4.99 ~ "CPE_neutral",
+    CPE_mean >= 4.99 ~ "CPE_yes"
+  ))
+```
+
+```{r}
+ggplot(d_work_plot_lm)+
+  geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean))+
+  geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)), method = "lm", se=FALSE)
+```
+
+### z-Transformation
+```{r}
+d_work_s_TEST <- d_work_s %>% 
+  mutate(CPE_z = (CPE_mean - mean(CPE_mean))/sd(CPE_mean),
+         OCA_z = (OC_A_mean - mean(OC_A_mean))/sd(OC_A_mean),
+         QQ_gesamt_z = (QQ_Gesamt_mean - mean(QQ_Gesamt_mean))/sd(QQ_Gesamt_mean))
+```
+
+#### Hypothesenprüfung
+```{r}
+lm1 <- lm(QQ_Gesamt_mean ~ OCA_z + OCA_z*CPE_z, d_work_s_TEST)
+summary(lm1)
+```
+
+
+
+## Geschlecht moderiert den Zusammenhang von OCA und QQ-Gesamt
+```{r}
+ggplot(d_work_plot_lm)+
+  geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Geschlecht)))+
+  geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Geschlecht)), method = "lm", se=FALSE)
+```
+
+### Hypothesenprüfung
+```{r}
+lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean, d_work_s)
+summary(lm2)
+```
 
