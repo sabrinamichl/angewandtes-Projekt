@@ -91,8 +91,21 @@ raw4 <- raw3 %>%
                     `4` = 2,
                     `5` = 1)))
 ```
-  > Wird aktuell nicht umkodiert!!!
- 
+
+## Recodieren der eigenen QQ Skala 
+```{r}
+raw4 <- raw4 %>% 
+  mutate(across(
+    .cols = QQ_N10, QQ_N11,
+    .fns = ~dplyr::recode(.,
+                    `1` = 5,
+                    `2` = 4,
+                    `3` = 3,
+                    `4` = 2,
+                    `5` = 1)))
+```
+
+
 # 3. Variablen umkodieren
 ```{r}
 raw4$Geschlecht <- as.numeric(raw4$Geschlecht)
@@ -213,8 +226,8 @@ raw4 %>%
   
 ### Austauschen der Werte
 ```{r}
-raw4$CPE_M11[61] <- 4.63
-raw4$SL_05[61] <-3.37
+raw4$CPE_M11[61] <- 4.701087
+raw4$SL_05[61] <-3.402174
 ```
 
 ### NA's checken
@@ -239,7 +252,7 @@ raw4a %>%
   summarise(mean(TIME_SUM),
             sd(TIME_SUM))
 ```
- >> Die Probanden benötigen im Mittel 9 Minuten zum Ausfüllen mit einer Standardabweichung von 2.65 Minuten
+
  
 # 6. Verteilungen der Soziodemografika
 ## Geschlecht
@@ -256,7 +269,8 @@ raw4a %>%
   summarise(mean(Alter, na.rm=TRUE),
          sd(Alter, na.rm=TRUE), 
          max(Alter, na.rm =TRUE),
-         min(Alter, na.rm=TRUE))
+         min(Alter, na.rm=TRUE),
+         median(Alter, na.rm=TRUE))
 ```
 
 ### visuelle Darstellung des Alters
@@ -340,7 +354,7 @@ raw4a %>%
 raw4a %>% 
   ggplot()+
   aes(x=Position_im_Unternehmen)+
-  geom_histogram(fill = "bisque3")+
+  geom_histogram(fill = "green4")+
   theme_minimal()
 ```
 
@@ -518,7 +532,7 @@ d_work_s_TEST <- d_work_s %>%
 
 #### Hypothesenprüfung
 ```{r}
-lm1 <- lm(QQ_Gesamt_mean ~ OCA_z + OCA_z*CPE_z, d_work_s_TEST)
+lm1 <- lm(QQ_Gesamt_mean ~ OC_A_mean + OCA_z*CPE_z, d_work_s_TEST)
 summary(lm1)
 ```
 
