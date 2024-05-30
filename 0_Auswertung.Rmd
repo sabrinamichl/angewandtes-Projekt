@@ -96,7 +96,7 @@ raw4 <- raw3 %>%
 ```{r}
 raw4 <- raw4 %>% 
   mutate(across(
-    .cols = QQ_N10, QQ_N11,
+    .cols = c(QQ_N10, QQ_N11),
     .fns = ~dplyr::recode(.,
                     `1` = 5,
                     `2` = 4,
@@ -237,6 +237,20 @@ skim(raw4)
 
 
 # 5. `BZG_J` und `BZG_M` zusammenrechnen
+## BZG_M NA's mit Nullen austauschen
+```{r}
+raw4 %>% 
+  filter(is.na(BZG_M))
+```
+```{r}
+raw4$BZG_M[39] <- 0
+raw4$BZG_M[42] <- 0
+raw4$BZG_M[107] <- 0
+raw4$BZG_M[149] <- 0
+raw4$BZG_M[152] <- 0
+```
+
+## BZG-Variablen umrechnen
 ```{r}
 raw4a <- raw4 %>% 
   mutate(BZG_JM = (BZG_J*12)) %>% 
@@ -244,13 +258,24 @@ raw4a <- raw4 %>%
   select(-c(BZG_J, BZG_M, BZG_JM))
 ```
 
-# Bearbeitungszeit genauer betrachten
+##  BZG genauer betrachten
 ```{r}
 raw4a %>% 
-  select(TIME_SUM) %>% 
-  mutate(TIME_SUM = TIME_SUM/60) %>% 
-  summarise(mean(TIME_SUM),
-            sd(TIME_SUM))
+  filter(BZG < 1) %>% 
+  count()
+```
+ > 31 Personen sind weniger als 1 Jahr bei ihrem aktuellen Unternehmen beschäftigt
+
+
+
+
+### Deskriptive Werte von BZG betrachten
+```{r}
+raw4a %>% 
+  summarise(mean = mean(BZG),
+         sd = sd(BZG),
+         max = max(BZG),
+         min = min(BZG))
 ```
 
  
@@ -272,6 +297,12 @@ raw4a %>%
          min(Alter, na.rm=TRUE),
          median(Alter, na.rm=TRUE))
 ```
+
+```{r}
+raw4a %>% 
+  filter(Alter > 60)
+```
+
 
 ### visuelle Darstellung des Alters
 ```{r}
@@ -304,15 +335,22 @@ raw4a %>%
 ```
 
 
-## Arbitszeitmodell
+## Arbeitszeitmodell
 ```{r}
 raw4a %>% 
-  count(Arbeitszeitmodell) %>% 
-  mutate(mean(Arbeitszeitmodell, na.rm=TRUE),
+  summarise(mean(Arbeitszeitmodell, na.rm=TRUE),
          sd(Arbeitszeitmodell, na.rm=TRUE),
-         prob = n/sum(n)) %>% 
-  round(2)
+         min(Arbeitszeitmodell, na.rm=TRUE),
+         max(Arbeitszeitmodell, na.rm=TRUE))
 ```
+
+### Arbeitszeitmodell Extremwerte betrachten
+```{r}
+raw4a %>% 
+  filter(Arbeitszeitmodell < 10) %>% 
+  select(ID, Alter, Geschlecht, Bildung, Arbeitszeitmodell, everything())
+```
+  > 
 
 ### Visuelle Darstellung der verschiedenen Arbeitsmodelle
 ```{r}
@@ -532,7 +570,7 @@ d_work_s_TEST <- d_work_s %>%
 
 #### Hypothesenprüfung
 ```{r}
-lm1 <- lm(QQ_Gesamt_mean ~ OC_A_mean + OCA_z*CPE_z, d_work_s_TEST)
+lm1 <- lm(QQ_Gesamt_mean ~ OC_A_mean+ OCA_z*CPE_z, d_work_s_TEST)
 summary(lm1)
 ```
 
