@@ -226,8 +226,8 @@ raw4 %>%
   
 ### Austauschen der Werte
 ```{r}
-raw4$CPE_M11[61] <- 4.701087
-raw4$SL_05[61] <-3.402174
+raw4$CPE_M11[61] <- 4.675393
+raw4$SL_05[61] <-3.445026
 ```
 
 ### NA's checken
@@ -250,6 +250,11 @@ raw4$BZG_M[149] <- 0
 raw4$BZG_M[152] <- 0
 ```
 
+```{r}
+raw4 %>% 
+  filter(is.na(BZG_M))
+```
+
 ## BZG-Variablen umrechnen
 ```{r}
 raw4a <- raw4 %>% 
@@ -267,12 +272,11 @@ raw4a %>%
  > 31 Personen sind weniger als 1 Jahr bei ihrem aktuellen Unternehmen beschäftigt
 
 
-
-
 ### Deskriptive Werte von BZG betrachten
 ```{r}
 raw4a %>% 
   summarise(mean = mean(BZG),
+            median = median(BZG),
          sd = sd(BZG),
          max = max(BZG),
          min = min(BZG))
@@ -292,10 +296,10 @@ raw4a %>%
 ```{r}
 raw4a %>% 
   summarise(mean(Alter, na.rm=TRUE),
+            median(Alter, na.rm=TRUE),
          sd(Alter, na.rm=TRUE), 
          max(Alter, na.rm =TRUE),
-         min(Alter, na.rm=TRUE),
-         median(Alter, na.rm=TRUE))
+         min(Alter, na.rm=TRUE))
 ```
 
 ```{r}
@@ -310,9 +314,9 @@ raw4a %>%
   ggplot()+
   aes(x=Alter)+
   geom_histogram(fill = "bisque3")+
-  geom_vline(xintercept=36.25 , color="thistle2", size=2)+
-  geom_vline(xintercept=49,60016, color="turquoise1", size=1)+
-  geom_vline(xintercept=22,99984, color="turquoise1", size=1)+
+  geom_vline(xintercept=38.95263 , color="thistle2", size=2)+
+  geom_vline(xintercept=52.48225, color="turquoise1", size=1)+
+  geom_vline(xintercept=25.42301, color="turquoise1", size=1)+
   theme_minimal()
 ```
 
@@ -339,18 +343,11 @@ raw4a %>%
 ```{r}
 raw4a %>% 
   summarise(mean(Arbeitszeitmodell, na.rm=TRUE),
+            median(Arbeitszeitmodell, na.rm=TRUE),
          sd(Arbeitszeitmodell, na.rm=TRUE),
          min(Arbeitszeitmodell, na.rm=TRUE),
          max(Arbeitszeitmodell, na.rm=TRUE))
 ```
-
-### Arbeitszeitmodell Extremwerte betrachten
-```{r}
-raw4a %>% 
-  filter(Arbeitszeitmodell < 10) %>% 
-  select(ID, Alter, Geschlecht, Bildung, Arbeitszeitmodell, everything())
-```
-  > 
 
 ### Visuelle Darstellung der verschiedenen Arbeitsmodelle
 ```{r}
@@ -360,7 +357,13 @@ raw4a %>%
   geom_histogram(fill = "bisque3")+
   theme_minimal()
 ```
-
+### Arbeitszeitmodell Extremwerte betrachten
+```{r}
+raw4a %>% 
+  filter(Arbeitszeitmodell < 10 | Arbeitszeitmodell > 45) %>% 
+  arrange(desc(Arbeitszeitmodell)) %>% 
+  select(ID, Alter, Geschlecht, Bildung, Arbeitszeitmodell, everything())
+```
 
 ## Gehalt
 ```{r}
@@ -410,7 +413,7 @@ raw4a %>%
 raw4a %>% 
   ggplot()+
   aes(x=Remotarbeit)+
-  geom_bar(fill = "bisque3")+
+  geom_bar(fill = "green4")+
   theme_minimal()
 ```
 
