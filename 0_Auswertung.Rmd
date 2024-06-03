@@ -42,6 +42,7 @@ raw1 = raw1[-1,]
 names(raw1) <- c("Alter", "Geschlecht", "Bildung", "Bildung_sonstig", "BZG_J", "BZG_M", "Beschaeftigungsart", "Arbeitszeitmodell", "Gehalt", "Position_im_Unternehmen", "Remotarbeit", "IS_K01", "IS_K02", "IS_K03", "IS_K04", "IS_E05", "IS_E06", "IS_E07", "IS_E08", "OC_A01", "OC_A02", "OC_A03", "OC_A04", "OC_A05", "CPE_C01", "CPE_C02", "CPE_C03", "CPE_C04", "CPE_I05", "CPE_I06", "CPE_I07", "CPE_I08", "CPE_M09", "CPE_M10", "CPE_M11", "CPE_M12", "CPE_E13", "CPE_E14", "CPE_E15", "CPE_E16", "PS_01", "PS_02", "PS_03", "PS_04", "PS_05", "PS_06", "PS_07", "QQ_01", "QQ_02", "QQ_03", "QQ_04", "QQ_05", "QQ_06", "QQ_07", "QQ_N08", "QQ_N09", "QQ_N10", "QQ_N11", "QQ_N12", "QQ_N13", "QQ_N14", "SL_01", "SL_02", "SL_03", "SL_04", "SL_05", "SL_06", "SL_07", "ZE01", "ZE04", "TIME_SUM", "TIME_RSI")
 ```
 
+
 ## ID-Spalte einfügen
 ```{r}
 raw2 <- raw1 %>% 
@@ -91,20 +92,6 @@ raw4 <- raw3 %>%
                     `4` = 2,
                     `5` = 1)))
 ```
-
-## Recodieren der eigenen QQ Skala 
-```{r}
-raw4 <- raw4 %>% 
-  mutate(across(
-    .cols = c(QQ_N10, QQ_N11),
-    .fns = ~dplyr::recode(.,
-                    `1` = 5,
-                    `2` = 4,
-                    `3` = 3,
-                    `4` = 2,
-                    `5` = 1)))
-```
-
 
 # 3. Variablen umkodieren
 ```{r}
@@ -205,9 +192,59 @@ raw4$TIME_SUM <- as.numeric(raw4$TIME_SUM)
 raw4$TIME_RSI <- as.numeric(raw4$TIME_RSI)
 ```
 
+## Bearbeitungszeit 
+```{r}
+raw4_1 <- raw4 %>% 
+  mutate(Time_sum_m = TIME_SUM / 60)
+```
+
+```{r}
+raw4_1 %>% 
+  summarise(median = median(Time_sum_m),
+            sd = sd(Time_sum_m))
+```
+
+```{r}
+raw4_1 %>% 
+  filter(Time_sum_m < 4.450805 | Time_sum_m > 15.53253) %>% 
+  select(ID, Alter, Geschlecht, Bildung, Time_sum_m, everything())
+```
+
+```{r}
+raw4_1 %>% 
+  ggplot()+
+  aes(x=Time_sum_m)+
+  geom_histogram(fill = "bisque3")+
+  theme_minimal()
+```
+
+### Personen mit einer unterdurchschnittlichen Bearbeitungsdauer rausschmeißen
+```{r}
+drops <-c(15, 106)
+```
+
+```{r}
+raw4_2 <- raw4_1[-drops,]
+```
+
+### Daten neu sortieren
+```{r}
+raw4_3 <- raw4_2 %>% 
+  select(-ID) %>% 
+  mutate(ID = row_number()) %>% 
+  select(ID, Alter, Geschlecht, Bildung, Bildung_sonstig, BZG_J, BZG_M, Beschaeftigungsart, Arbeitszeitmodell, Gehalt, Position_im_Unternehmen, Remotarbeit, everything())
+```
+
+### Daten checken
+```{r}
+raw4_3 %>% 
+  filter(Time_sum_m < 4.450805 | Time_sum_m > 15.53253) %>% 
+  select(ID, Alter, Geschlecht, Bildung, Time_sum_m, everything())
+```
+
 # 4. Mittelwerte der jeweiligen Items mit NA's anschauen
 ```{r}
-raw4 %>% 
+raw4_3 %>% 
   summarise(mean_CPE_M11 = mean(CPE_M11, na.rm = TRUE),
             mean_SL_05 = mean(SL_05, na.rm=TRUE))
 ```
