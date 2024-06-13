@@ -610,17 +610,18 @@ ggplot(d_work_plot_lm)+
   geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)), method = "lm", se=FALSE)
 ```
 
-### z-Transformation
+### Zentrieren
 ```{r}
 d_work_s_TEST <- d_work_s %>% 
-  mutate(CPE_z = (CPE_mean - mean(CPE_mean))/sd(CPE_mean),
-         OCA_z = (OC_A_mean - mean(OC_A_mean))/sd(OC_A_mean),
-         QQ_gesamt_z = (QQ_Gesamt_mean - mean(QQ_Gesamt_mean))/sd(QQ_Gesamt_mean))
+  mutate(CPE_c = (CPE_mean - mean(CPE_mean)),
+         OCA_c = (OC_A_mean - mean(OC_A_mean)),
+         QQ_gesamt_z = (QQ_Gesamt_mean - mean(QQ_Gesamt_mean)))
 ```
+
 
 #### Hypothesenprüfung
 ```{r}
-lm1 <- lm(QQ_Anand_mean ~ OCA_z+ OCA_z*CPE_z, d_work_s_TEST)
+lm1 <- lm(QQ_Anand_mean ~ OCA_c+ OCA_c*CPE_c, d_work_s_TEST)
 summary(lm1)
 ```
 
