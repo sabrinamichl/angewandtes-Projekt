@@ -449,7 +449,7 @@ raw4a %>%
 
 # 7. Kurzen Datensatz `raw` abspeichern
 ```{r}
-write.csv(raw4, file="raw4.csv")
+write.csv(raw4a, file="raw4.csv")
 ```
 
 # 8. Cronbachs Alpha berechnen
@@ -639,4 +639,7 @@ ggplot(d_work_plot_lm)+
 lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + OC_A_mean*Geschlecht, d_work_s)
 summary(lm2)
 ```
+
+
+
 
