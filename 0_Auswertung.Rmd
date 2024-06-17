@@ -262,7 +262,6 @@ raw4_3$SL_05[60] <- 3.42328
 skim(raw4_3)
 ```
 
-
 # 5. `BZG_J` und `BZG_M` zusammenrechnen
 ## BZG_M NA's mit Nullen austauschen
 ```{r}
@@ -579,7 +578,7 @@ d_work_s1 %>%
 
 ```{r}
 subset_cor <- subset(d_work,
-                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
+                     select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt, Position_im_Unternehmen, Remotarbeit, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
 ```{r}
@@ -594,6 +593,94 @@ corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ```
 
 # 12. Überprüfung der Hypothesen
+
+## Organisationales Commitment - affektiv `OCA`
+### QQ-Anand
+```{r}
+lm1 <- lm(QQ_Anand_mean ~ OC_A_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm1)
+```
+
+```{r}
+d_work %>% 
+  filter(is.na(Gehalt & Alter))
+```
+
+  > Wie im Abschnit 4 gesehen haben wir bei Alter und Gehalt jeweils 2 NA's, jetzt zeigt sich, dass diese drei Personen sich daraus ergeben, dass eine Person fehlende Werte im Alter sowie Gehalt hat.
+
+### Gesamte QQ-Skala
+```{r}
+lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm2)
+```
+
+## Irritation `IS`
+### QQ-Anand
+```{r}
+lm3 <- lm(QQ_Anand_mean ~ IS_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm3)
+```
+
+### Gesamte QQ-Skala
+```{r}
+lm4 <- lm(QQ_Gesamt_mean ~ IS_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm4)
+```
+
+## Kultur für psychologisches Empowerment - `CPE`
+### QQ-Anand
+```{r}
+lm5 <- lm(QQ_Anand_mean ~ CPE_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm5)
+```
+
+### Gesamte QQ-Skala
+```{r}
+lm6 <- lm(QQ_Gesamt_mean ~ CPE_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm6)
+```
+
+## Psychologische Sicherheit `PS` 
+### QQ-Anand
+```{r}
+lm7 <- lm(QQ_Anand_mean ~ PS_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm7)
+```
+
+### Gesamte QQ-Skala
+```{r}
+lm8 <- lm(QQ_Gesamt_mean ~ PS_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm8)
+```
+
+## Servant Leadership `SL`
+### QQ-Anand
+```{r}
+lm9 <- lm(QQ_Anand_mean ~ SL_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm9)
+```
+
+### Gesamte QQ-Skala
+```{r}
+lm9 <- lm(QQ_Gesamt_mean ~ SL_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+summary(lm9)
+```
+
+
+
+
+
+
+
+
+
+
+#```{r}
+
+```
+
+
+
 ## PE moderiert den Zusammenhang von OCA und QQ-Gesamt
 ```{r}
 d_work_plot_lm<- d_work_s %>% 
@@ -617,15 +704,6 @@ d_work_s_TEST <- d_work_s %>%
          OCA_c = (OC_A_mean - mean(OC_A_mean)),
          QQ_gesamt_z = (QQ_Gesamt_mean - mean(QQ_Gesamt_mean)))
 ```
-
-
-#### Hypothesenprüfung
-```{r}
-lm1 <- lm(QQ_Anand_mean ~ OCA_c+ OCA_c*CPE_c, d_work_s_TEST)
-summary(lm1)
-```
-
-
 
 ## Geschlecht moderiert den Zusammenhang von OCA und QQ-Gesamt
 ```{r}
