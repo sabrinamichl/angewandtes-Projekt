@@ -667,21 +667,7 @@ summary(lm9)
 ```
 
 
-
-
-
-
-
-
-
-
-#```{r}
-
-```
-
-
-
-## PE moderiert den Zusammenhang von OCA und QQ-Gesamt
+## Moderation: PE moderiert den Zusammenhang von OCA und QQ-Gesamt
 ```{r}
 d_work_plot_lm<- d_work_s %>% 
   mutate(CPE = case_when(
@@ -705,16 +691,24 @@ d_work_s_TEST <- d_work_s %>%
          QQ_gesamt_z = (QQ_Gesamt_mean - mean(QQ_Gesamt_mean)))
 ```
 
-## Geschlecht moderiert den Zusammenhang von OCA und QQ-Gesamt
 ```{r}
-ggplot(d_work_plot_lm)+
-  geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Geschlecht)))+
-  geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Geschlecht)), method = "lm", se=FALSE)
+d_work_plot_lm_1 <- d_work_plot_lm %>% 
+  mutate(Alter_kat = case_when(
+    Alter <= 33.5 ~ "jung",
+    Alter > 33.5 ~ "alt"
+  ))
+```
+
+## Moderation: Geschlecht moderiert den Zusammenhang von OCA und QQ-Gesamt
+```{r}
+ggplot(d_work_plot_lm_1+
+  geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Alter_kat)))+
+  geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Alter_kat)), method = "lm", se=FALSE)
 ```
 
 ### Hypothesenprüfung
 ```{r}
-lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + OC_A_mean*Geschlecht, d_work_s)
+lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + OC_A_mean*Alter_kat, d_work_plot_lm_1)
 summary(lm2)
 ```
 
