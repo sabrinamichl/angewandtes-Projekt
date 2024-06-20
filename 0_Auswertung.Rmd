@@ -8,6 +8,7 @@ library(bayestestR)
 library(bayesplot)
 library(tidymodels)
 library(corrplot)
+library(QuantPsyc)
 ```
 
 ```{r}
@@ -598,7 +599,7 @@ corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ### QQ-Anand
 ```{r}
 lm1 <- lm(QQ_Anand_mean ~ OC_A_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
-plot(lm1)
+summary(lm1)
 ```
 
 ```{r}
@@ -611,7 +612,7 @@ d_work %>%
 ### Gesamte QQ-Skala
 ```{r}
 lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
-plot(lm2)
+summary(lm2)
 ```
 
 ## Irritation `IS`
@@ -716,6 +717,7 @@ simpleSlope_lm12 <- sim.slopes(mod=lm12, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
 graph.mod(simpleSlope_lm12, x=OC_A_mean, y=QQ_Gesamt_mean, data=d_work_s, ylab="QQ", xlab="OCA")
 ```
 
+
 # Moderation: Alter moderiert den Zusammenhang von OCA und QQ-Gesamt
 ## Alter in Kategorien unterteilen
 ```{r}
@@ -726,8 +728,6 @@ d_work_plot_lm_1 <- d_work_plot_lm %>%
   ))
 ```
   > Hierfür wurde der mediane Wert des Alters genutzt
-
-
 
 ```{r}
 ggplot(d_work_plot_lm_1)+
