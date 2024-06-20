@@ -578,7 +578,7 @@ d_work_s1 %>%
 
 ```{r}
 subset_cor <- subset(d_work,
-                     select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt, Position_im_Unternehmen, Remotarbeit, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
+                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
 ```{r}
@@ -598,7 +598,7 @@ corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ### QQ-Anand
 ```{r}
 lm1 <- lm(QQ_Anand_mean ~ OC_A_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
-summary(lm1)
+plot(lm1)
 ```
 
 ```{r}
@@ -611,7 +611,7 @@ d_work %>%
 ### Gesamte QQ-Skala
 ```{r}
 lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
-summary(lm2)
+plot(lm2)
 ```
 
 ## Irritation `IS`
@@ -667,8 +667,7 @@ summary(lm10)
 ```
 
 
-## Moderation: PE moderiert den Zusammenhang von OCA und QQ-Gesamt
-### CPE in Kategorien unterteilen
+# Moderation: CPE moderiert den Zusammenhang von OCA und QQ
 ```{r}
 d_work_plot_lm<- d_work_s %>% 
   mutate(CPE = case_when(
@@ -678,34 +677,46 @@ d_work_plot_lm<- d_work_s %>%
   ))
 ```
 
-### Visuelle Darstellung des möglichen Zusammenhangs
+## Visuelle Darstellung des möglichen Zusammenhangs
 ```{r}
 ggplot(d_work_plot_lm)+
   geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean))+
-  geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)), method = "lm", se=FALSE)
+  geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)), method = "lm", se=FALSE)+
+  theme_minimal()
 ```
 
-### Zentrieren
+## QQ_Anand
 ```{r}
-d_work_s_TEST <- d_work_s %>% 
-  mutate(CPE_c = (CPE_mean - mean(CPE_mean)),
-         OCA_c = (OC_A_mean - mean(OC_A_mean)),
-         QQ_gesamt_z = (QQ_Gesamt_mean - mean(QQ_Gesamt_mean)))
-```
-
-### Modellierung
-#### QQ_Anand
-```{r}
-lm11 <- lm(QQ_Anand_mean ~ OC_A_mean + OC_A_mean*CPE_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm11 <- moderate.lm(x=OC_A_mean, z=CPE_mean, y=QQ_Anand_mean, data=d_work_s,
+                      mc=FALSE)
 summary(lm11)
 ```
-#### QQ_Gesamt
+
 ```{r}
-lm12 <- lm(QQ_Gesamt_mean ~ OC_A_mean + OC_A_mean*CPE_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+simpleSlope_lm11 <- sim.slopes(mod=lm11, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
+```
+
+```{r}
+graph.mod(simpleSlope_lm11, x=OC_A_mean, y=QQ_Anand_mean, data=d_work_s, ylab="QQ", xlab="OCA")
+```
+
+
+## QQ_Gesamt
+```{r}
+lm12 <- moderate.lm(x=OC_A_mean, z=CPE_mean, y=QQ_Gesamt_mean, data=d_work_s,
+                      mc=FALSE)
 summary(lm12)
 ```
 
-# Moderation: PE moderiert den Zusammenhang von OCA und QQ-Gesamt
+```{r}
+simpleSlope_lm12 <- sim.slopes(mod=lm12, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
+```
+
+```{r}
+graph.mod(simpleSlope_lm12, x=OC_A_mean, y=QQ_Gesamt_mean, data=d_work_s, ylab="QQ", xlab="OCA")
+```
+
+# Moderation: Alter moderiert den Zusammenhang von OCA und QQ-Gesamt
 ## Alter in Kategorien unterteilen
 ```{r}
 d_work_plot_lm_1 <- d_work_plot_lm %>% 
@@ -714,23 +725,81 @@ d_work_plot_lm_1 <- d_work_plot_lm %>%
     Alter > 33.5 ~ "alt"
   ))
 ```
+  > Hierfür wurde der mediane Wert des Alters genutzt
 
-## Moderation: Geschlecht moderiert den Zusammenhang von OCA und QQ-Gesamt
+
+
 ```{r}
 ggplot(d_work_plot_lm_1)+
   geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Alter_kat)))+
   geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Alter_kat)), method = "lm", se=FALSE)
 ```
 
-### Hypothesenprüfung
+## QQ_Anand
 ```{r}
-lm13 <- lm(QQ_Anand_mean ~ OC_A_mean + OC_A_mean*Alter_kat + Alter + Geschlecht + BZG + Gehalt, data=d_work_plot_lm_1)
+lm13 <- moderate.lm(x=OC_A_mean, z=Alter, y=QQ_Anand_mean, data=d_work_s,
+                      mc=FALSE)
 summary(lm13)
 ```
 
 ```{r}
-lm14 <- lm(QQ_Gesamt_mean ~ OC_A_mean + OC_A_mean*Alter_kat + Alter + Geschlecht + BZG + Gehalt, data=d_work_plot_lm_1)
+simpleSlope_lm13 <- sim.slopes(mod=lm13, z=d_work_s$Alter, zsd=1, mcz=FALSE)
+```
+
+```{r}
+graph.mod(simpleSlope_lm13, x=OC_A_mean, y=QQ_Anand_mean, data=d_work_s, ylab="QQ", xlab="OCA")
+```
+
+## QQ_Gesamt
+```{r}
+lm14 <- moderate.lm(x=OC_A_mean, z=Alter, y=QQ_Gesamt_mean, data=d_work_s,
+                      mc=FALSE)
 summary(lm14)
+```
+
+```{r}
+simpleSlope_lm14 <- sim.slopes(mod=lm14, z=d_work_s$Alter, zsd=1, mcz=FALSE)
+```
+
+```{r}
+graph.mod(simpleSlope_lm14, x=OC_A_mean, y=QQ_Gesamt_mean, data=d_work_s, ylab="QQ", xlab="OCA")
+```
+
+# Moderation: CPE moderiert den Zusammenhang von SL und QQ
+```{r}
+ggplot(d_work_plot_lm)+
+  geom_jitter(mapping = aes(x=SL_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)))+
+  geom_smooth(mapping = aes(x=SL_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)), method = "lm", se=FALSE)
+```
+
+## QQ_Anand
+```{r}
+lm15 <- moderate.lm(x=SL_mean, z=CPE_mean, y=QQ_Anand_mean, data=d_work_s,
+                      mc=FALSE)
+summary(lm15)
+```
+
+```{r}
+simpleSlope_lm15 <- sim.slopes(mod=lm15, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
+```
+
+```{r}
+graph.mod(simpleSlope_lm15, x=SL_mean, y=QQ_Anand_mean, data=d_work_s, ylab="QQ", xlab="OCA")
+```
+
+## QQ_Gesamt
+```{r}
+lm16 <- moderate.lm(x=SL_mean, z=CPE_mean, y=QQ_Gesamt_mean, data=d_work_s,
+                      mc=FALSE)
+summary(lm16)
+```
+
+```{r}
+simpleSlope_lm16 <- sim.slopes(mod=lm16, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
+```
+
+```{r}
+graph.mod(simpleSlope_lm16, x=SL_mean, y=QQ_Gesamt_mean, data=d_work_s, ylab="QQ", xlab="OCA")
 ```
 
 
