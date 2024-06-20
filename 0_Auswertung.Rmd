@@ -37,7 +37,6 @@ raw1 <- d_raw %>%
 raw1 = raw1[-1,]
 ```
 
-
 ## Spaltennamen umbenennen
 ```{r}
 names(raw1) <- c("Alter", "Geschlecht", "Bildung", "Bildung_sonstig", "BZG_J", "BZG_M", "Beschaeftigungsart", "Arbeitszeitmodell", "Gehalt", "Position_im_Unternehmen", "Remotarbeit", "IS_K01", "IS_K02", "IS_K03", "IS_K04", "IS_E05", "IS_E06", "IS_E07", "IS_E08", "OC_A01", "OC_A02", "OC_A03", "OC_A04", "OC_A05", "CPE_C01", "CPE_C02", "CPE_C03", "CPE_C04", "CPE_I05", "CPE_I06", "CPE_I07", "CPE_I08", "CPE_M09", "CPE_M10", "CPE_M11", "CPE_M12", "CPE_E13", "CPE_E14", "CPE_E15", "CPE_E16", "PS_01", "PS_02", "PS_03", "PS_04", "PS_05", "PS_06", "PS_07", "QQ_01", "QQ_02", "QQ_03", "QQ_04", "QQ_05", "QQ_06", "QQ_07", "QQ_N08", "QQ_N09", "QQ_N10", "QQ_N11", "QQ_N12", "QQ_N13", "QQ_N14", "SL_01", "SL_02", "SL_03", "SL_04", "SL_05", "SL_06", "SL_07", "ZE01", "ZE04", "TIME_SUM", "TIME_RSI")
@@ -250,7 +249,7 @@ raw4_3 %>%
 raw4_3 %>% 
   filter(is.na(CPE_M11 | SL_05))
 ```
-  > Eine Person (ID = 61) hat also weder eine Angabe zu CPE_M11 und SL_05 gemacht! Da ansonsten alle Werte vorhanden sind, werden diese NA's durch die Mittelwerte ausgetauscht!
+  > Eine Person (ID = 60) hat also weder eine Angabe zu CPE_M11 und SL_05 gemacht! Da ansonsten alle Werte vorhanden sind, werden diese NA's durch die Mittelwerte ausgetauscht!
   
 ### Austauschen der Werte
 ```{r}
@@ -298,7 +297,7 @@ raw4a %>%
   filter(BZG < 1) %>% 
   count()
 ```
- > 31 Personen sind weniger als 1 Jahr bei ihrem aktuellen Unternehmen beschäftigt
+ > 30 Personen sind weniger als 1 Jahr bei ihrem aktuellen Unternehmen beschäftigt
 
 
 ### Deskriptive Werte von BZG betrachten
@@ -320,6 +319,8 @@ raw4a %>%
   mutate(prob = n/sum(n)) %>%
   round(2)
 ```
+  > 1 = männlich
+  > 2 = weiblich
 
 ## Alter
 ```{r}
@@ -368,7 +369,7 @@ raw4a %>%
 ```
 
 
-## Arbeitszeitmodell
+## Arbeitszeitmodell = Stunden/Woche
 ```{r}
 raw4a %>% 
   summarise(mean = mean(Arbeitszeitmodell, na.rm=TRUE),
@@ -446,11 +447,11 @@ raw4a %>%
   theme_minimal()
 ```
 
-
 # 7. Kurzen Datensatz `raw` abspeichern
 ```{r}
 write.csv(raw4a, file="raw4.csv")
 ```
+
 
 # 8. Cronbachs Alpha berechnen
 ## Irritation
@@ -488,7 +489,7 @@ psych::alpha(subset(raw4a, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
 ```{r}
 psych::alpha(subset(raw4a, select=c(QQ_01:QQ_N14), check.keys=TRUE))
 ```
-  > Wie bereits im der oberen Analyse der neuen Fragen bereits gesehen, fällt auch in der Gesamtbetrachtung auf, dass gerade das Item `QQ_N08` eine Item-Rest-Korrelation von 0.208 hat, weswegen dieses Item aus dem Fragebogen fällt
+  > Wie bereits im der oberen Analyse der neuen Fragen bereits gesehen, fällt auch in der Gesamtbetrachtung auf, dass gerade das Item `QQ_N08` eine Item-Rest-Korrelation von 0.207 hat, weswegen dieses Item aus dem Fragebogen fällt
 
 ### QQ_N08 aus dem Datensatz werfen
 ```{r}
@@ -594,7 +595,6 @@ corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ```
 
 # 12. Überprüfung der Hypothesen
-
 ## Organisationales Commitment - affektiv `OCA`
 ### QQ-Anand
 ```{r}
@@ -687,7 +687,6 @@ ggplot(d_work_plot_lm)+
 ```
 
 ## QQ_Anand
-
 ```{r}
 lm11 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_s)
 summary(lm11)
@@ -773,6 +772,5 @@ summary(lm16)
 ```{r}
 interact_plot(model=lm16, pred=SL_mean, modx=CPE_mean)
 ```
-
 
 
