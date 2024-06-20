@@ -687,36 +687,27 @@ ggplot(d_work_plot_lm)+
 ```
 
 ## QQ_Anand
+
 ```{r}
-lm11 <- moderate.lm(x=OC_A_mean, z=CPE_mean, y=QQ_Anand_mean, data=d_work_s,
-                      mc=FALSE)
+lm11 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_s)
 summary(lm11)
 ```
 
 ```{r}
-simpleSlope_lm11 <- sim.slopes(mod=lm11, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
-```
-
-```{r}
-graph.mod(simpleSlope_lm11, x=OC_A_mean, y=QQ_Anand_mean, data=d_work_s, ylab="QQ", xlab="OCA")
+library(interactions)
+interact_plot(model=lm11, pred=OC_A_mean, modx=CPE_mean)
 ```
 
 
 ## QQ_Gesamt
 ```{r}
-lm12 <- moderate.lm(x=OC_A_mean, z=CPE_mean, y=QQ_Gesamt_mean, data=d_work_s,
-                      mc=FALSE)
+lm12 <- lm(QQ_Gesamt_mean ~ OC_A_mean*CPE_mean, data=d_work_s)
 summary(lm12)
 ```
 
 ```{r}
-simpleSlope_lm12 <- sim.slopes(mod=lm12, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
+interact_plot(model=lm12, pred=OC_A_mean, modx=CPE_mean)
 ```
-
-```{r}
-graph.mod(simpleSlope_lm12, x=OC_A_mean, y=QQ_Gesamt_mean, data=d_work_s, ylab="QQ", xlab="OCA")
-```
-
 
 # Moderation: Alter moderiert den Zusammenhang von OCA und QQ-Gesamt
 ## Alter in Kategorien unterteilen
@@ -737,32 +728,22 @@ ggplot(d_work_plot_lm_1)+
 
 ## QQ_Anand
 ```{r}
-lm13 <- moderate.lm(x=OC_A_mean, z=Alter, y=QQ_Anand_mean, data=d_work_s,
-                      mc=FALSE)
+lm13 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter, data=d_work_s)
 summary(lm13)
 ```
 
 ```{r}
-simpleSlope_lm13 <- sim.slopes(mod=lm13, z=d_work_s$Alter, zsd=1, mcz=FALSE)
-```
-
-```{r}
-graph.mod(simpleSlope_lm13, x=OC_A_mean, y=QQ_Anand_mean, data=d_work_s, ylab="QQ", xlab="OCA")
+interact_plot(model=lm13, pred=OC_A_mean, modx=Alter)
 ```
 
 ## QQ_Gesamt
 ```{r}
-lm14 <- moderate.lm(x=OC_A_mean, z=Alter, y=QQ_Gesamt_mean, data=d_work_s,
-                      mc=FALSE)
+lm14 <- lm(QQ_Gesamt_mean ~ OC_A_mean*Alter, data=d_work_s)
 summary(lm14)
 ```
 
 ```{r}
-simpleSlope_lm14 <- sim.slopes(mod=lm14, z=d_work_s$Alter, zsd=1, mcz=FALSE)
-```
-
-```{r}
-graph.mod(simpleSlope_lm14, x=OC_A_mean, y=QQ_Gesamt_mean, data=d_work_s, ylab="QQ", xlab="OCA")
+interact_plot(model=lm14, pred=OC_A_mean, modx=Alter)
 ```
 
 # Moderation: CPE moderiert den Zusammenhang von SL und QQ
@@ -774,32 +755,24 @@ ggplot(d_work_plot_lm)+
 
 ## QQ_Anand
 ```{r}
-lm15 <- moderate.lm(x=SL_mean, z=CPE_mean, y=QQ_Anand_mean, data=d_work_s,
-                      mc=FALSE)
+lm15 <- lm(QQ_Anand_mean ~ SL_mean*CPE_mean, data=d_work_s)
 summary(lm15)
 ```
 
 ```{r}
-simpleSlope_lm15 <- sim.slopes(mod=lm15, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
+interact_plot(model=lm15, pred=SL_mean, modx=CPE_mean)
 ```
 
-```{r}
-graph.mod(simpleSlope_lm15, x=SL_mean, y=QQ_Anand_mean, data=d_work_s, ylab="QQ", xlab="OCA")
-```
 
 ## QQ_Gesamt
 ```{r}
-lm16 <- moderate.lm(x=SL_mean, z=CPE_mean, y=QQ_Gesamt_mean, data=d_work_s,
-                      mc=FALSE)
+lm16 <- lm(QQ_Gesamt_mean ~ SL_mean*CPE_mean, data=d_work_s)
 summary(lm16)
 ```
 
 ```{r}
-simpleSlope_lm16 <- sim.slopes(mod=lm16, z=d_work_s$CPE_mean, zsd=1, mcz=FALSE)
+interact_plot(model=lm16, pred=SL_mean, modx=CPE_mean)
 ```
 
-```{r}
-graph.mod(simpleSlope_lm16, x=SL_mean, y=QQ_Gesamt_mean, data=d_work_s, ylab="QQ", xlab="OCA")
-```
 
 
