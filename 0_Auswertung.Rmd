@@ -250,7 +250,8 @@ raw4_3 %>%
   filter(is.na(CPE_M11 | SL_05))
 ```
   > Eine Person (ID = 60) hat also weder eine Angabe zu CPE_M11 und SL_05 gemacht! Da ansonsten alle Werte vorhanden sind, werden diese NA's durch die Mittelwerte ausgetauscht!
-  
+
+
 ### Austauschen der Werte
 ```{r}
 raw4_3$CPE_M11[60] <- 4.656085
@@ -411,6 +412,20 @@ raw4a %>%
   geom_histogram(fill = "green4")+
   theme_minimal()
 ```
+
+###### NEU NEU NEU NEU NEU - Gehaltsstufen 5-7 zusammenfassen
+```{r}
+raw4a_Gehalt <- raw4a %>% 
+  mutate(Gehalt_n = case_when(
+    Gehalt = 1 ~ 1,
+    Gehalt = 2 ~ 2,
+    Gehalt = 3 ~ 3,
+    Gehalt = 4 ~ 4,
+    Gehalt = 5 ~ 5,
+    Gehalt = 6 ~ 5,
+    Gehalt = 7 ~ 5))
+```
+
 
 ## Position im Unternehmen
 ```{r}
@@ -580,7 +595,7 @@ d_work_s1 %>%
 
 ```{r}
 subset_cor <- subset(d_work,
-                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
+                     select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt, Position_im_Unternehmen, Remotarbeit, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
 ```{r}
@@ -588,8 +603,15 @@ library(apaTables)
 apa.cor.table(subset_cor, filename = "corr-com.doc", table.number = 2)
 ```
 
+###### NEU NEU NEU NEU 
 ```{r}
-M = cor(subset_cor)
+subset_cor1 <- subset(d_work,
+                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
+```
+
+
+```{r}
+M = cor(subset_cor1)
 M
 corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ```
@@ -727,22 +749,22 @@ ggplot(d_work_plot_lm_1)+
 
 ## QQ_Anand
 ```{r}
-lm13 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter, data=d_work_s)
+lm13 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_plot_lm_1)
 summary(lm13)
 ```
 
 ```{r}
-interact_plot(model=lm13, pred=OC_A_mean, modx=Alter)
+interact_plot(model=lm13, pred=OC_A_mean, modx=Alter_kat)
 ```
 
 ## QQ_Gesamt
 ```{r}
-lm14 <- lm(QQ_Gesamt_mean ~ OC_A_mean*Alter, data=d_work_s)
+lm14 <- lm(QQ_Gesamt_mean ~ OC_A_mean*Alter_kat, data=d_work_plot_lm_1)
 summary(lm14)
 ```
 
 ```{r}
-interact_plot(model=lm14, pred=OC_A_mean, modx=Alter)
+interact_plot(model=lm14, pred=OC_A_mean, modx=Alter_kat)
 ```
 
 # Moderation: CPE moderiert den Zusammenhang von SL und QQ
