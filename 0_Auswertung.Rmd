@@ -253,10 +253,10 @@ raw4_3 %>%
 
 
 ### Austauschen der Werte
-```{r}
+
 raw4_3$CPE_M11[60] <- 4.656085
 raw4_3$SL_05[60] <- 3.42328
-```
+
 
 ### NA's checken
 ```{r}
@@ -295,8 +295,7 @@ raw4a <- raw4_3 %>%
 ##  BZG genauer betrachten
 ```{r}
 raw4a %>% 
-  filter(BZG < 1) %>% 
-  count()
+  filter(BZG < 0.5) 
 ```
  > 30 Personen sind weniger als 1 Jahr bei ihrem aktuellen Unternehmen beschäftigt
 
@@ -415,21 +414,42 @@ raw4a %>%
 
 ###### NEU NEU NEU NEU NEU - Gehaltsstufen 5-7 zusammenfassen
 ```{r}
-raw4a_Gehalt <- raw4a %>% 
+raw4a1 <- raw4a %>% 
   mutate(Gehalt_n = case_when(
-    Gehalt = 1 ~ 1,
-    Gehalt = 2 ~ 2,
-    Gehalt = 3 ~ 3,
-    Gehalt = 4 ~ 4,
-    Gehalt = 5 ~ 5,
-    Gehalt = 6 ~ 5,
-    Gehalt = 7 ~ 5))
+    Gehalt == 1 ~ 1,
+    Gehalt == 2 ~ 2,
+    Gehalt == 3 ~ 3,
+    Gehalt == 4 ~ 4,
+    Gehalt == 5 ~ 5,
+    Gehalt == 6 ~ 5,
+    Gehalt == 7 ~ 5))
+```
+
+```{r}
+raw4a1 %>% 
+  select(Gehalt, Gehalt_n) %>% 
+  arrange(desc(Gehalt))
+```
+
+```{r}
+raw4a2 <- raw4a1 %>% 
+  select(-Gehalt) %>% 
+  select(ID, Alter, Geschlecht, Bildung, Bildung_sonstig, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, everything())
+```
+
+
+```{r}
+raw4a2 %>% 
+  ggplot()+
+  aes(x=Gehalt_n)+
+  geom_histogram(fill = "green4")+
+  theme_minimal()
 ```
 
 
 ## Position im Unternehmen
 ```{r}
-raw4a %>% 
+raw4a2 %>% 
   count(Position_im_Unternehmen) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -437,7 +457,7 @@ raw4a %>%
 
 ### Visuelle Darstellung der Position im Unternehmen
 ```{r}
-raw4a %>% 
+raw4a2 %>% 
   ggplot()+
   aes(x=Position_im_Unternehmen)+
   geom_histogram(fill = "green4")+
@@ -447,7 +467,7 @@ raw4a %>%
 
 ## Remotearbeit
 ```{r}
-raw4a %>% 
+raw4a2 %>% 
   count(Remotarbeit) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -455,7 +475,7 @@ raw4a %>%
 
 ### Visuelle Darstellung der Remotearbeit
 ```{r}
-raw4a %>% 
+raw4a2 %>% 
   ggplot()+
   aes(x=Remotarbeit)+
   geom_bar(fill = "green4")+
@@ -464,51 +484,51 @@ raw4a %>%
 
 # 7. Kurzen Datensatz `raw` abspeichern
 ```{r}
-write.csv(raw4a, file="raw4.csv")
+write.csv(raw4a2, file="raw4.csv")
 ```
 
 
 # 8. Cronbachs Alpha berechnen
 ## Irritation
 ```{r}
-psych::alpha(subset(raw4a, select=c(IS_K01:IS_E08)), check.keys=TRUE)
+psych::alpha(subset(raw4a2, select=c(IS_K01:IS_E08)), check.keys=TRUE)
 ```
 
 ## CPE
 ```{r}
-psych::alpha(subset(raw4a, select=c(CPE_C01:CPE_E16)), check.keys=TRUE)
+psych::alpha(subset(raw4a2, select=c(CPE_C01:CPE_E16)), check.keys=TRUE)
 ```
 
 ## PS
 ```{r}
-psych::alpha(subset(raw4a, select=c(PS_01:PS_07)), check.keys=TRUE)
+psych::alpha(subset(raw4a2, select=c(PS_01:PS_07)), check.keys=TRUE)
 ```
 
 ## OCA
 ```{r}
-psych::alpha(subset(raw4a, select=c(OC_A01:OC_A05)), check.keys=TRUE)
+psych::alpha(subset(raw4a2, select=c(OC_A01:OC_A05)), check.keys=TRUE)
 ```
 
 ## QQ
-## QQ (Anand)
+### QQ (Anand)
 ```{r}
-psych::alpha(subset(raw4a, select=c(QQ_01:QQ_07), check.keys=TRUE))
+psych::alpha(subset(raw4a2, select=c(QQ_01:QQ_07), check.keys=TRUE))
 ```
 
 ### QQ-Neu
 ```{r}
-psych::alpha(subset(raw4a, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
+psych::alpha(subset(raw4a2, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
 ```
 
 ### QQ-Gesamt
 ```{r}
-psych::alpha(subset(raw4a, select=c(QQ_01:QQ_N14), check.keys=TRUE))
+psych::alpha(subset(raw4a2, select=c(QQ_01:QQ_N14), check.keys=TRUE))
 ```
   > Wie bereits im der oberen Analyse der neuen Fragen bereits gesehen, fällt auch in der Gesamtbetrachtung auf, dass gerade das Item `QQ_N08` eine Item-Rest-Korrelation von 0.207 hat, weswegen dieses Item aus dem Fragebogen fällt
 
 ### QQ_N08 aus dem Datensatz werfen
 ```{r}
-raw4b <- raw4a %>% 
+raw4b <- raw4a2 %>% 
   select(-QQ_N08)
 ```
 
@@ -522,7 +542,13 @@ psych::alpha(subset(raw4b, select=c(QQ_01:QQ_N14), check.keys=TRUE))
 psych::alpha(subset(raw4b, select=c(SL_01:SL_07)), check.keys=TRUE)
 ```
 
-# 9. Skalen zusammenfassen
+# 9.Spearman-Brown-Formel zum Berechnen der Reliabilität bei Testverlängerung
+```{r}
+library(CTT)
+spearman.brown(0.7580887, input = 13/7 ,n.or.r = "n")
+```
+
+# 10. Skalen zusammenfassen
 ## Irriation (IS)
 ```{r}
 d_work <- raw4b
@@ -533,10 +559,10 @@ d_work$IS_E_mean <- rowMeans(subset(raw4b, select = c(IS_E05, IS_E06, IS_E07, IS
 
 ## Kultur für psychologisches Empowerment in Organisationen (CPE)
 ```{r}
-d_work$CPE_mean <- rowMeans(subset(raw4b, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04, CPE_I05, CPE_I06, CPE_I07, CPE_I08, CPE_M09, CPE_M10, CPE_M11, CPE_M12, CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
+d_work$CPE_mean <- rowMeans(subset(raw4b, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04, CPE_I05, CPE_I06, CPE_I07, CPE_I08, CPE_M09, CPE_M10, CPE_M11, CPE_M12, CPE_E13, CPE_E14, CPE_E15, CPE_E16)), na.rm=TRUE)
 d_work$CPE_C_mean <- rowMeans(subset(raw4b, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04)))
 d_work$CPE_I_mean <- rowMeans(subset(raw4b, select = c(CPE_I05, CPE_I06, CPE_I07, CPE_I08)))
-d_work$CPE_M_mean <- rowMeans(subset(raw4b, select = c(CPE_M09, CPE_M10, CPE_M11, CPE_M12)))
+d_work$CPE_M_mean <- rowMeans(subset(raw4b, select = c(CPE_M09, CPE_M10, CPE_M11, CPE_M12)), na.rm = TRUE)
 d_work$CPE_E_mean <- rowMeans(subset(raw4b, select = c(CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
 ```
 
@@ -559,7 +585,7 @@ d_work$QQ_Gesamt_mean <- rowMeans(subset(raw4b, select = c(QQ_01, QQ_02, QQ_03, 
 
 ## Servant Leadership
 ```{r}
-d_work$SL_mean <- rowMeans(subset(raw4b, select = c(SL_01, SL_02, SL_03, SL_04, SL_05, SL_06, SL_07)))
+d_work$SL_mean <- rowMeans(subset(raw4b, select = c(SL_01, SL_02, SL_03, SL_04, SL_05, SL_06, SL_07)), na.rm = TRUE)
 ```
 
 ## Einzelne Items aus dem Datensatz entfernen
@@ -569,7 +595,7 @@ d_work_s <- d_work %>%
   select(ID, everything())
 ```
 
-# 10. Kurzen Datensatz `d_work` abspeichern
+# 11. Kurzen Datensatz `d_work` abspeichern
 ```{r}
 write.csv(d_work_s, file="d_work_s.csv")
 ```
@@ -580,7 +606,7 @@ skim(d_work_s)
 ```
 
 
-# 11. Korrelationen zwischen den Skalen
+# 12. Korrelationen zwischen den Skalen
 ```{r}
 d_work_s1 <- d_work_s %>% 
   select(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean)
@@ -595,7 +621,7 @@ d_work_s1 %>%
 
 ```{r}
 subset_cor <- subset(d_work,
-                     select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt, Position_im_Unternehmen, Remotarbeit, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
+                     select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, IS_mean, CPE_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
 ```{r}
@@ -609,83 +635,82 @@ subset_cor1 <- subset(d_work,
                      select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
-
 ```{r}
 M = cor(subset_cor1)
 M
 corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ```
 
-# 12. Überprüfung der Hypothesen
+# 13. Überprüfung der Hypothesen
 ## Organisationales Commitment - affektiv `OCA`
 ### QQ-Anand
 ```{r}
-lm1 <- lm(QQ_Anand_mean ~ OC_A_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm1 <- lm(QQ_Anand_mean ~ OC_A_mean, data=d_work_s)
 summary(lm1)
 ```
 
 ```{r}
 d_work %>% 
-  filter(is.na(Gehalt & Alter))
+  filter(is.na(Gehalt_n & Alter))
 ```
 
   > Wie im Abschnit 4 gesehen haben wir bei Alter und Gehalt jeweils 2 NA's, jetzt zeigt sich, dass diese drei Personen sich daraus ergeben, dass eine Person fehlende Werte im Alter sowie Gehalt hat.
 
 ### Gesamte QQ-Skala
 ```{r}
-lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm2)
 ```
 
 ## Irritation `IS`
 ### QQ-Anand
 ```{r}
-lm3 <- lm(QQ_Anand_mean ~ IS_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm3 <- lm(QQ_Anand_mean ~ IS_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm3)
 ```
 
 ### Gesamte QQ-Skala
 ```{r}
-lm4 <- lm(QQ_Gesamt_mean ~ IS_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm4 <- lm(QQ_Gesamt_mean ~ IS_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm4)
 ```
 
 ## Kultur für psychologisches Empowerment - `CPE`
 ### QQ-Anand
 ```{r}
-lm5 <- lm(QQ_Anand_mean ~ CPE_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm5 <- lm(QQ_Anand_mean ~ CPE_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm5)
 ```
 
 ### Gesamte QQ-Skala
 ```{r}
-lm6 <- lm(QQ_Gesamt_mean ~ CPE_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm6 <- lm(QQ_Gesamt_mean ~ CPE_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm6)
 ```
 
 ## Psychologische Sicherheit `PS` 
 ### QQ-Anand
 ```{r}
-lm7 <- lm(QQ_Anand_mean ~ PS_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm7 <- lm(QQ_Anand_mean ~ PS_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm7)
 ```
 
 ### Gesamte QQ-Skala
 ```{r}
-lm8 <- lm(QQ_Gesamt_mean ~ PS_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm8 <- lm(QQ_Gesamt_mean ~ PS_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm8)
 ```
 
 ## Servant Leadership `SL`
 ### QQ-Anand
 ```{r}
-lm9 <- lm(QQ_Anand_mean ~ SL_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm9 <- lm(QQ_Anand_mean ~ SL_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm9)
 ```
 
 ### Gesamte QQ-Skala
 ```{r}
-lm10 <- lm(QQ_Gesamt_mean ~ SL_mean + Alter + Geschlecht + BZG + Gehalt, data=d_work_s)
+lm10 <- lm(QQ_Gesamt_mean ~ SL_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
 summary(lm10)
 ```
 
