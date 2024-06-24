@@ -390,7 +390,14 @@ raw4ab %>%
   geom_histogram(fill = "green4")+
   theme_minimal()
 ```
-
+## Beschäftigungsart
+```{r}
+raw4ab %>% 
+  count(Beschaeftigungsart) %>% 
+    mutate(prob = n/sum(n)) %>% 
+  round(2)
+```
+ 1 = befristet, 2 = unbefristet
 
 ## Arbeitszeitmodell = Stunden/Woche
 ```{r}
@@ -653,6 +660,8 @@ subset_cor <- subset(d_work,
 library(apaTables)
 apa.cor.table(subset_cor, filename = "corr-com.doc", table.number = 2)
 ```
+  > Aufgrund dessen, dass weder das Geschlecht, Bildung, Beschäftigungsart, Arbeitszeitmodell und Remotearbeit keinen Zusammenhang mit QQ oder den möglichen Prädiktoren haben, werden diese als Kontrollvariablen aus der Untersuchung ausgeschlossen!
+
 
 ###### NEU NEU NEU NEU 
 ```{r}
