@@ -297,12 +297,27 @@ raw4a <- raw4_3 %>%
 raw4a %>% 
   filter(BZG < 0.5) 
 ```
- > 30 Personen sind weniger als 1 Jahr bei ihrem aktuellen Unternehmen beschäftigt
+ > 14 Personen sind weniger als 0,5 Jahr bei ihrem aktuellen Unternehmen beschäftigt
 
+### Personen die weniger als ein halbes Jahr im Unternehmen sind, werden rausgeworfen
+```{r}
+drops_4a <-c(12, 30, 40, 43, 48, 59, 72, 75, 103, 113, 131, 153, 182, 189)
+```
+
+```{r}
+raw4aa <- raw4a[-drops_4a,]
+```
+
+```{r}
+raw4ab <- raw4aa %>% 
+  select(-ID) %>% 
+  mutate(ID = row_number()) %>% 
+  select(ID, Alter, Geschlecht, Bildung, Bildung_sonstig, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt, Position_im_Unternehmen, Remotarbeit, everything())
+```
 
 ### Deskriptive Werte von BZG betrachten
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   summarise(mean = mean(BZG),
             median = median(BZG),
          sd = sd(BZG),
@@ -310,11 +325,19 @@ raw4a %>%
          min = min(BZG))
 ```
 
+```{r}
+raw4ab %>% 
+  ggplot()+
+  aes(x=BZG)+
+  geom_histogram(fill = "bisque3")+
+  theme_minimal()
+```
+
  
 # 6. Verteilungen der Soziodemografika
 ## Geschlecht
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   count(Geschlecht) %>% 
   mutate(prob = n/sum(n)) %>%
   round(2)
@@ -324,7 +347,7 @@ raw4a %>%
 
 ## Alter
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   summarise(mean(Alter, na.rm=TRUE),
             median(Alter, na.rm=TRUE),
          sd(Alter, na.rm=TRUE), 
@@ -333,14 +356,14 @@ raw4a %>%
 ```
 
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   filter(Alter > 60)
 ```
 
 
-### visuelle Darstellung des Alters
+### visuelle Darstellung des Alters -> NEU NEU NEU
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   ggplot()+
   aes(x=Alter)+
   geom_histogram(fill = "bisque3")+
@@ -353,7 +376,7 @@ raw4a %>%
 
 ## Bildung
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   count(Bildung) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -361,7 +384,7 @@ raw4a %>%
 
 ### Visuelle Darstellung der Bildung
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   ggplot()+
   aes(x=Bildung)+
   geom_histogram(fill = "green4")+
@@ -371,7 +394,7 @@ raw4a %>%
 
 ## Arbeitszeitmodell = Stunden/Woche
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   summarise(mean = mean(Arbeitszeitmodell, na.rm=TRUE),
             median = median(Arbeitszeitmodell, na.rm=TRUE),
          sd = sd(Arbeitszeitmodell, na.rm=TRUE),
@@ -381,15 +404,16 @@ raw4a %>%
 
 ### Visuelle Darstellung der verschiedenen Arbeitsmodelle
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   ggplot()+
   aes(x=Arbeitszeitmodell)+
   geom_histogram(fill = "green4")+
   theme_minimal()
 ```
+
 ### Arbeitszeitmodell Extremwerte betrachten
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   filter(Arbeitszeitmodell < 10 | Arbeitszeitmodell > 45) %>% 
   arrange(desc(Arbeitszeitmodell)) %>% 
   select(ID, Alter, Geschlecht, Bildung, Arbeitszeitmodell, everything())
@@ -397,7 +421,7 @@ raw4a %>%
 
 ## Gehalt
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   count(Gehalt) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -405,7 +429,7 @@ raw4a %>%
 
 ### Visuelle Darstellung des Gehalts
 ```{r}
-raw4a %>% 
+raw4ab %>% 
   ggplot()+
   aes(x=Gehalt)+
   geom_histogram(fill = "green4")+
@@ -414,7 +438,7 @@ raw4a %>%
 
 ###### NEU NEU NEU NEU NEU - Gehaltsstufen 5-7 zusammenfassen
 ```{r}
-raw4a1 <- raw4a %>% 
+raw4a1 <- raw4ab %>% 
   mutate(Gehalt_n = case_when(
     Gehalt == 1 ~ 1,
     Gehalt == 2 ~ 2,
@@ -645,9 +669,10 @@ corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ## Organisationales Commitment - affektiv `OCA`
 ### QQ-Anand
 ```{r}
-lm1 <- lm(QQ_Anand_mean ~ OC_A_mean, data=d_work_s)
+lm1 <- lm(QQ_Anand_mean ~ OC_A_mean + BZG, data=d_work_s)
 summary(lm1)
 ```
+
 
 ```{r}
 d_work %>% 
@@ -658,66 +683,66 @@ d_work %>%
 
 ### Gesamte QQ-Skala
 ```{r}
-lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + BZG, data=d_work_lm)
 summary(lm2)
 ```
 
 ## Irritation `IS`
 ### QQ-Anand
 ```{r}
-lm3 <- lm(QQ_Anand_mean ~ IS_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm3 <- lm(QQ_Anand_mean ~ IS_mean + BZG, data=d_work_lm)
 summary(lm3)
 ```
 
 ### Gesamte QQ-Skala
 ```{r}
-lm4 <- lm(QQ_Gesamt_mean ~ IS_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm4 <- lm(QQ_Gesamt_mean ~ IS_mean + BZG, data=d_work_s)
 summary(lm4)
 ```
 
 ## Kultur für psychologisches Empowerment - `CPE`
 ### QQ-Anand
 ```{r}
-lm5 <- lm(QQ_Anand_mean ~ CPE_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm5 <- lm(QQ_Anand_mean ~ CPE_mean + BZG, data=d_work_s)
 summary(lm5)
 ```
 
 ### Gesamte QQ-Skala
 ```{r}
-lm6 <- lm(QQ_Gesamt_mean ~ CPE_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm6 <- lm(QQ_Gesamt_mean ~ CPE_mean + BZG, data=d_work_s)
 summary(lm6)
 ```
 
 ## Psychologische Sicherheit `PS` 
 ### QQ-Anand
 ```{r}
-lm7 <- lm(QQ_Anand_mean ~ PS_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm7 <- lm(QQ_Anand_mean ~ PS_mean + BZG, data=d_work_s)
 summary(lm7)
 ```
 
 ### Gesamte QQ-Skala
 ```{r}
-lm8 <- lm(QQ_Gesamt_mean ~ PS_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm8 <- lm(QQ_Gesamt_mean ~ PS_mean + BZG, data=d_work_s)
 summary(lm8)
 ```
 
 ## Servant Leadership `SL`
 ### QQ-Anand
 ```{r}
-lm9 <- lm(QQ_Anand_mean ~ SL_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm9 <- lm(QQ_Anand_mean ~ SL_mean + BZG, data=d_work_s)
 summary(lm9)
 ```
 
 ### Gesamte QQ-Skala
 ```{r}
-lm10 <- lm(QQ_Gesamt_mean ~ SL_mean + Alter + Geschlecht + Gehalt_n, data=d_work_s)
+lm10 <- lm(QQ_Gesamt_mean ~ SL_mean + BZG, data=d_work_s)
 summary(lm10)
 ```
 
 
 # Moderation: CPE moderiert den Zusammenhang von OCA und QQ
 ```{r}
-d_work_plot_lm<- d_work_s %>% 
+d_work_plot_lm <- d_work_s %>% 
   mutate(CPE = case_when(
     CPE_mean <= 3.99 ~ "CPE_no",
     CPE_mean > 3.99 & CPE_mean < 4.99 ~ "CPE_neutral",
@@ -760,8 +785,8 @@ interact_plot(model=lm12, pred=OC_A_mean, modx=CPE_mean)
 ```{r}
 d_work_plot_lm_1 <- d_work_plot_lm %>% 
   mutate(Alter_kat = case_when(
-    Alter <= 33.5 ~ "jung",
-    Alter > 33.5 ~ "alt"
+    Alter <= 36 ~ "jung",
+    Alter > 36 ~ "alt"
   ))
 ```
   > Hierfür wurde der mediane Wert des Alters genutzt
