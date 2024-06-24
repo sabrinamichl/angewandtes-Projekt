@@ -569,8 +569,9 @@ psych::alpha(subset(raw4b, select=c(SL_01:SL_07)), check.keys=TRUE)
 # 9.Spearman-Brown-Formel zum Berechnen der Reliabilität bei Testverlängerung
 ```{r}
 library(CTT)
-spearman.brown(0.7580887, input = 13/7 ,n.or.r = "n")
+spearman.brown(0.7579793, input = 13/7 ,n.or.r = "n")
 ```
+  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von .8532938 vorweisen würde und diese die Relibilität der von uns verlängerten Skala 0.8540333 beträgt (-0.0007395). Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
 
 # 10. Skalen zusammenfassen
 ## Irriation (IS)
@@ -666,78 +667,95 @@ corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ```
 
 # 13. Überprüfung der Hypothesen
-## Organisationales Commitment - affektiv `OCA`
-### QQ-Anand
+
+## Alter in Kategorien unterteilen
 ```{r}
-lm1 <- lm(QQ_Anand_mean ~ OC_A_mean + BZG, data=d_work_s)
+d_work_lm <- d_work_s %>% 
+  mutate(Alter_kat = case_when(
+    Alter <= 36 ~ "jung",
+    Alter > 36 ~ "alt"
+  ))
+```
+
+### T-Test zur Überprüfung als Kontrollvariable
+```{r}
+t_test_result_QQ_Alter <- t.test(QQ_Anand_mean ~ Alter_kat, data = d_work_lm)
+print(t_test_result_QQ_Alter)
+```
+
+```{r}
+t_test_result_CPE_Alter <- t.test(CPE_mean ~ Alter_kat, data = d_work_lm)
+print(t_test_result_CPE_Alter)
+```
+
+```{r}
+t_test_result_PS_Alter <- t.test(PS_mean ~ Alter_kat, data = d_work_lm)
+print(t_test_result_PS_Alter)
+```
+
+```{r}
+t_test_result_IS_Alter <- t.test(IS_mean ~ Alter_kat, data = d_work_lm)
+print(t_test_result_IS_Alter)
+```
+
+```{r}
+t_test_result_SL_Alter <- t.test(SL_mean ~ Alter_kat, data = d_work_lm)
+print(t_test_result_SL_Alter)
+```
+
+```{r}
+t_test_result_OCA_Alter <- t.test(OC_A_mean ~ Alter_kat, data = d_work_lm)
+print(t_test_result_OCA_Alter)
+```
+  > Aufgrund der nicht signifikaten T-Tests mit der AV und den UVs ist Alter_kat nicht als Kontrollvariable geeignet.
+  > Da Gehalt_n möglicherweise eine Scheinkorrelation erzeugen würde, wird auch diese nicht als Kontrollvariable in die Modell mit aufgenommen.
+  > Da die Residuen der Variable BZG nicht normalverteilt ist und die Position im Unternehmen 
+
+```{r}
+lm_PiU <- lm(QQ_Anand_mean ~ Position_im_Unternehmen, data=d_work_lm)
+plot(lm_PiU)
+```
+
+```{r}
+lm_BZG <- lm(QQ_Anand_mean ~ BZG, data=d_work_lm)
+plot(lm_BZG)
+```
+
+## Organisationales Commitment - affektiv `OCA`
+```{r}
+lm1 <- lm(QQ_Anand_mean ~ OC_A_mean, data=d_work_lm)
 summary(lm1)
 ```
-
-
-```{r}
-d_work %>% 
-  filter(is.na(Gehalt_n & Alter))
-```
-
-  > Wie im Abschnit 4 gesehen haben wir bei Alter und Gehalt jeweils 2 NA's, jetzt zeigt sich, dass diese drei Personen sich daraus ergeben, dass eine Person fehlende Werte im Alter sowie Gehalt hat.
-
-### Gesamte QQ-Skala
-```{r}
-lm2 <- lm(QQ_Gesamt_mean ~ OC_A_mean + BZG, data=d_work_lm)
-summary(lm2)
-```
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca 42 %
 
 ## Irritation `IS`
-### QQ-Anand
 ```{r}
-lm3 <- lm(QQ_Anand_mean ~ IS_mean + BZG, data=d_work_lm)
-summary(lm3)
+lm2 <- lm(QQ_Anand_mean ~ IS_mean, data=d_work_lm)
+summary(lm2)
 ```
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca 4 %
 
-### Gesamte QQ-Skala
-```{r}
-lm4 <- lm(QQ_Gesamt_mean ~ IS_mean + BZG, data=d_work_s)
-summary(lm4)
-```
 
 ## Kultur für psychologisches Empowerment - `CPE`
-### QQ-Anand
 ```{r}
-lm5 <- lm(QQ_Anand_mean ~ CPE_mean + BZG, data=d_work_s)
-summary(lm5)
+lm3 <- lm(QQ_Anand_mean ~ CPE_mean, data=d_work_s)
+summary(lm3)
 ```
-
-### Gesamte QQ-Skala
-```{r}
-lm6 <- lm(QQ_Gesamt_mean ~ CPE_mean + BZG, data=d_work_s)
-summary(lm6)
-```
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca 38 %
 
 ## Psychologische Sicherheit `PS` 
-### QQ-Anand
 ```{r}
-lm7 <- lm(QQ_Anand_mean ~ PS_mean + BZG, data=d_work_s)
-summary(lm7)
+lm4 <- lm(QQ_Anand_mean ~ PS_mean, data=d_work_s)
+summary(lm4)
 ```
-
-### Gesamte QQ-Skala
-```{r}
-lm8 <- lm(QQ_Gesamt_mean ~ PS_mean + BZG, data=d_work_s)
-summary(lm8)
-```
-
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca 22 %
+  
 ## Servant Leadership `SL`
-### QQ-Anand
 ```{r}
-lm9 <- lm(QQ_Anand_mean ~ SL_mean + BZG, data=d_work_s)
-summary(lm9)
+lm5 <- lm(QQ_Anand_mean ~ SL_mean, data=d_work_s)
+summary(lm5)
 ```
-
-### Gesamte QQ-Skala
-```{r}
-lm10 <- lm(QQ_Gesamt_mean ~ SL_mean + BZG, data=d_work_s)
-summary(lm10)
-```
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca 31 %
 
 
 # Moderation: CPE moderiert den Zusammenhang von OCA und QQ
@@ -758,27 +776,17 @@ ggplot(d_work_plot_lm)+
   theme_minimal()
 ```
 
-## QQ_Anand
 ```{r}
-lm11 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_s)
-summary(lm11)
+lm6 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_s)
+summary(lm6)
 ```
+  > Keinen signifikante Moderation!
 
 ```{r}
 library(interactions)
 interact_plot(model=lm11, pred=OC_A_mean, modx=CPE_mean)
 ```
 
-
-## QQ_Gesamt
-```{r}
-lm12 <- lm(QQ_Gesamt_mean ~ OC_A_mean*CPE_mean, data=d_work_s)
-summary(lm12)
-```
-
-```{r}
-interact_plot(model=lm12, pred=OC_A_mean, modx=CPE_mean)
-```
 
 # Moderation: Alter moderiert den Zusammenhang von OCA und QQ-Gesamt
 ## Alter in Kategorien unterteilen
@@ -799,50 +807,15 @@ ggplot(d_work_plot_lm_1)+
 
 ## QQ_Anand
 ```{r}
-lm13 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_plot_lm_1)
-summary(lm13)
+lm7 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_plot_lm_1)
+summary(lm7)
 ```
 
 ```{r}
-interact_plot(model=lm13, pred=OC_A_mean, modx=Alter_kat)
-```
-
-## QQ_Gesamt
-```{r}
-lm14 <- lm(QQ_Gesamt_mean ~ OC_A_mean*Alter_kat, data=d_work_plot_lm_1)
-summary(lm14)
-```
-
-```{r}
-interact_plot(model=lm14, pred=OC_A_mean, modx=Alter_kat)
-```
-
-# Moderation: CPE moderiert den Zusammenhang von SL und QQ
-```{r}
-ggplot(d_work_plot_lm)+
-  geom_jitter(mapping = aes(x=SL_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)))+
-  geom_smooth(mapping = aes(x=SL_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)), method = "lm", se=FALSE)
-```
-
-## QQ_Anand
-```{r}
-lm15 <- lm(QQ_Anand_mean ~ SL_mean*CPE_mean, data=d_work_s)
-summary(lm15)
-```
-
-```{r}
-interact_plot(model=lm15, pred=SL_mean, modx=CPE_mean)
+interact_plot(model=lm7, pred=OC_A_mean, modx=Alter_kat)
 ```
 
 
-## QQ_Gesamt
-```{r}
-lm16 <- lm(QQ_Gesamt_mean ~ SL_mean*CPE_mean, data=d_work_s)
-summary(lm16)
-```
 
-```{r}
-interact_plot(model=lm16, pred=SL_mean, modx=CPE_mean)
-```
 
 
