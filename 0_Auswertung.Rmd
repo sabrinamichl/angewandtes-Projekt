@@ -53,15 +53,9 @@ raw2 <- raw1 %>%
 
 ## Kompletten Datensatz auf NA's prüfen
 ```{r}
-raw2 %>% 
-  summarise(across(everything(), 
-                   ~sum(is.na(.))))
-```
-
-```{r}
 skim(raw2)
 ```
-  > NA bei CPE_M11 & SL_05 --> später prüfen, wenn Werte numerisch sind! (vgl. 4.!)
+  > NA bei CPE_M11 & SL_05 --> wird als NA mit in die Zeilenmittelwerte mit einberechnet!
 
 
 # 2. Negative gepolte Items prüfen
@@ -208,18 +202,19 @@ raw4_1 %>%
 ```{r}
 raw4_1 %>% 
   filter(Time_sum_m < 4.450805 | Time_sum_m > 15.53253) %>% 
-  select(ID, Alter, Geschlecht, Bildung, Time_sum_m, everything())
+  select(ID, Alter, Geschlecht, Bildung, Time_sum_m, everything()) %>% 
+  arrange(-desc(Time_sum_m))
 ```
   > Wie sich zeigt, haben zwei Probanden den Fragebogen unter 2 SD vom Median beantwortet, weswegen diese aus dem Datensatz entfernt werden. Da weitere 5 Probanden länger als 2 SD vom Median zur Beantwortung benötigt haben, diese jedoch alle um die 50 Jahre oder älter sind, wird es von der gesamten Gruppe als logisch empfunden, dass diese Gruppe gegebenenfalls eher länger benötigt.
 
 
 ### Personen mit einer unterdurchschnittlichen Bearbeitungsdauer rausschmeißen
 ```{r}
-drops <-c(15, 106)
+drops_time <-c(15, 106)
 ```
 
 ```{r}
-raw4_2 <- raw4_1[-drops,]
+raw4_2 <- raw4_1[-drops_time,]
 ```
 
 ### Daten neu sortieren
@@ -237,33 +232,7 @@ raw4_3 %>%
   select(ID, Alter, Geschlecht, Bildung, Time_sum_m, everything())
 ```
 
-# 4. Mittelwerte der jeweiligen Items mit NA's anschauen
-```{r}
-raw4_3 %>% 
-  summarise(mean_CPE_M11 = mean(CPE_M11, na.rm=TRUE),
-            mean_SL_05 = mean(SL_05, na.rm=TRUE))
-```
-
-## Spalten mit NA's heraussuchen
-```{r}
-raw4_3 %>% 
-  filter(is.na(CPE_M11 | SL_05))
-```
-  > Eine Person (ID = 60) hat also weder eine Angabe zu CPE_M11 und SL_05 gemacht! Da ansonsten alle Werte vorhanden sind, werden diese NA's durch die Mittelwerte ausgetauscht!
-
-
-### Austauschen der Werte
-
-raw4_3$CPE_M11[60] <- 4.656085
-raw4_3$SL_05[60] <- 3.42328
-
-
-### NA's checken
-```{r}
-skim(raw4_3)
-```
-
-# 5. `BZG_J` und `BZG_M` zusammenrechnen
+# 4. `BZG_J` und `BZG_M` zusammenrechnen
 ## BZG_M NA's mit Nullen austauschen
 ```{r}
 raw4_3 %>% 
@@ -285,7 +254,7 @@ raw4_3 %>%
 
 ## BZG-Variablen umrechnen
 ```{r}
-raw4a <- raw4_3 %>% 
+raw4_4 <- raw4_3 %>% 
   mutate(BZG_JM = (BZG_J*12)) %>% 
   mutate(BZG = (BZG_JM+BZG_M)/12) %>% 
   select(-c(BZG_J, BZG_M, BZG_JM)) %>% 
@@ -294,22 +263,23 @@ raw4a <- raw4_3 %>%
 
 ##  BZG genauer betrachten
 ```{r}
-raw4a %>% 
+raw4_4 %>% 
   filter(BZG < 0.5) 
 ```
- > 14 Personen sind weniger als 0,5 Jahr bei ihrem aktuellen Unternehmen beschäftigt
+ > 14 Personen sind weniger als 0,5 Jahr bei ihrem aktuellen Unternehmen beschäftigt.
+ > In Deutschland liegt die gesetzliche Probezeit bei 6 Monaten (0,5 Jahr), da in diesem Zeitraum jederzeit, von beiden Seiten das Arbeitsverhältnis gekündigt werden kann, haben wir uns dazu entschlossen, diese Personen aus der Stichprobe zu entfernen, da hier eine tatsächliche Kündigung wahrscheinlicher wäre.
 
 ### Personen die weniger als ein halbes Jahr im Unternehmen sind, werden rausgeworfen
 ```{r}
-drops_4a <-c(12, 30, 40, 43, 48, 59, 72, 75, 103, 113, 131, 153, 182, 189)
+drops_4_4 <-c(12, 30, 40, 43, 48, 59, 72, 75, 103, 113, 131, 153, 182, 189)
 ```
 
 ```{r}
-raw4aa <- raw4a[-drops_4a,]
+raw4_5 <- raw4_4[-drops_4_4,]
 ```
 
 ```{r}
-raw4ab <- raw4aa %>% 
+raw4_6 <- raw4_5 %>% 
   select(-ID) %>% 
   mutate(ID = row_number()) %>% 
   select(ID, Alter, Geschlecht, Bildung, Bildung_sonstig, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt, Position_im_Unternehmen, Remotarbeit, everything())
@@ -317,7 +287,7 @@ raw4ab <- raw4aa %>%
 
 ### Deskriptive Werte von BZG betrachten
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   summarise(mean = mean(BZG),
             median = median(BZG),
          sd = sd(BZG),
@@ -326,10 +296,10 @@ raw4ab %>%
 ```
 
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   ggplot()+
   aes(x=BZG)+
-  geom_histogram(fill = "bisque3")+
+  geom_histogram(fill = "green4")+
   theme_minimal()
 ```
 
@@ -337,7 +307,7 @@ raw4ab %>%
 # 6. Verteilungen der Soziodemografika
 ## Geschlecht
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   count(Geschlecht) %>% 
   mutate(prob = n/sum(n)) %>%
   round(2)
@@ -347,7 +317,7 @@ raw4ab %>%
 
 ## Alter
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   summarise(mean(Alter, na.rm=TRUE),
             median(Alter, na.rm=TRUE),
          sd(Alter, na.rm=TRUE), 
@@ -356,27 +326,27 @@ raw4ab %>%
 ```
 
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   filter(Alter > 60)
 ```
 
 
 ### visuelle Darstellung des Alters -> NEU NEU NEU
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   ggplot()+
   aes(x=Alter)+
-  geom_histogram(fill = "bisque3")+
-  geom_vline(xintercept=39.10106 , color="thistle2", size=2)+
-  geom_vline(xintercept=52.62487, color="turquoise1", size=1)+
-  geom_vline(xintercept=25.57725, color="turquoise1", size=1)+
+  geom_histogram(fill = "green4")+
+  geom_vline(xintercept=40.26437 , color="orange2", size=2)+
+  geom_vline(xintercept=53.6445, color="yellow3", size=1)+
+  geom_vline(xintercept=26.88424, color="yellow3", size=1)+
   theme_minimal()
 ```
 
 
 ## Bildung
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   count(Bildung) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -384,7 +354,7 @@ raw4ab %>%
 
 ### Visuelle Darstellung der Bildung
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   ggplot()+
   aes(x=Bildung)+
   geom_histogram(fill = "green4")+
@@ -392,7 +362,7 @@ raw4ab %>%
 ```
 ## Beschäftigungsart
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   count(Beschaeftigungsart) %>% 
     mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -401,7 +371,7 @@ raw4ab %>%
 
 ## Arbeitszeitmodell = Stunden/Woche
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   summarise(mean = mean(Arbeitszeitmodell, na.rm=TRUE),
             median = median(Arbeitszeitmodell, na.rm=TRUE),
          sd = sd(Arbeitszeitmodell, na.rm=TRUE),
@@ -411,7 +381,7 @@ raw4ab %>%
 
 ### Visuelle Darstellung der verschiedenen Arbeitsmodelle
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   ggplot()+
   aes(x=Arbeitszeitmodell)+
   geom_histogram(fill = "green4")+
@@ -420,7 +390,7 @@ raw4ab %>%
 
 ### Arbeitszeitmodell Extremwerte betrachten
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   filter(Arbeitszeitmodell < 10 | Arbeitszeitmodell > 45) %>% 
   arrange(desc(Arbeitszeitmodell)) %>% 
   select(ID, Alter, Geschlecht, Bildung, Arbeitszeitmodell, everything())
@@ -428,7 +398,7 @@ raw4ab %>%
 
 ## Gehalt
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   count(Gehalt) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -436,16 +406,18 @@ raw4ab %>%
 
 ### Visuelle Darstellung des Gehalts
 ```{r}
-raw4ab %>% 
+raw4_6 %>% 
   ggplot()+
   aes(x=Gehalt)+
   geom_histogram(fill = "green4")+
   theme_minimal()
 ```
+  > Nach Absprache mit Frau Sende werden die Gehaltsstufen 5-7 in einer Stufe zusammengefasst!
 
-###### NEU NEU NEU NEU NEU - Gehaltsstufen 5-7 zusammenfassen
+
+#### Gehaltsstufen 5-7 zusammenfassen
 ```{r}
-raw4a1 <- raw4ab %>% 
+raw4_7 <- raw4_6 %>% 
   mutate(Gehalt_n = case_when(
     Gehalt == 1 ~ 1,
     Gehalt == 2 ~ 2,
@@ -457,20 +429,20 @@ raw4a1 <- raw4ab %>%
 ```
 
 ```{r}
-raw4a1 %>% 
+raw4_7 %>% 
   select(Gehalt, Gehalt_n) %>% 
   arrange(desc(Gehalt))
 ```
 
 ```{r}
-raw4a2 <- raw4a1 %>% 
+raw4_8 <- raw4_7 %>% 
   select(-Gehalt) %>% 
   select(ID, Alter, Geschlecht, Bildung, Bildung_sonstig, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, everything())
 ```
 
 
 ```{r}
-raw4a2 %>% 
+raw4_8 %>% 
   ggplot()+
   aes(x=Gehalt_n)+
   geom_histogram(fill = "green4")+
@@ -480,7 +452,7 @@ raw4a2 %>%
 
 ## Position im Unternehmen
 ```{r}
-raw4a2 %>% 
+raw4_8 %>% 
   count(Position_im_Unternehmen) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -488,7 +460,7 @@ raw4a2 %>%
 
 ### Visuelle Darstellung der Position im Unternehmen
 ```{r}
-raw4a2 %>% 
+raw4_8 %>% 
   ggplot()+
   aes(x=Position_im_Unternehmen)+
   geom_histogram(fill = "green4")+
@@ -498,7 +470,7 @@ raw4a2 %>%
 
 ## Remotearbeit
 ```{r}
-raw4a2 %>% 
+raw4_8 %>% 
   count(Remotarbeit) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -506,118 +478,118 @@ raw4a2 %>%
 
 ### Visuelle Darstellung der Remotearbeit
 ```{r}
-raw4a2 %>% 
+raw4_8 %>% 
   ggplot()+
   aes(x=Remotarbeit)+
   geom_bar(fill = "green4")+
   theme_minimal()
 ```
 
-# 7. Kurzen Datensatz `raw` abspeichern
+# 7. Datensatz `raw_8` zwischenspeichern
 ```{r}
-write.csv(raw4a2, file="raw4.csv")
+write.csv(raw4_8, file="raw4.csv")
 ```
 
 
 # 8. Cronbachs Alpha berechnen
 ## Irritation
 ```{r}
-psych::alpha(subset(raw4a2, select=c(IS_K01:IS_E08)), check.keys=TRUE)
+psych::alpha(subset(raw4_8, select=c(IS_K01:IS_E08)), check.keys=TRUE)
 ```
 
 ## CPE
 ```{r}
-psych::alpha(subset(raw4a2, select=c(CPE_C01:CPE_E16)), check.keys=TRUE)
+psych::alpha(subset(raw4_8, select=c(CPE_C01:CPE_E16)), check.keys=TRUE)
 ```
 
 ## PS
 ```{r}
-psych::alpha(subset(raw4a2, select=c(PS_01:PS_07)), check.keys=TRUE)
+psych::alpha(subset(raw4_8, select=c(PS_01:PS_07)), check.keys=TRUE)
 ```
 
 ## OCA
 ```{r}
-psych::alpha(subset(raw4a2, select=c(OC_A01:OC_A05)), check.keys=TRUE)
+psych::alpha(subset(raw4_8, select=c(OC_A01:OC_A05)), check.keys=TRUE)
 ```
 
 ## QQ
-### QQ (Anand)
+### QQ-Anand
 ```{r}
-psych::alpha(subset(raw4a2, select=c(QQ_01:QQ_07), check.keys=TRUE))
+psych::alpha(subset(raw4_8, select=c(QQ_01:QQ_07), check.keys=TRUE))
 ```
 
 ### QQ-Neu
 ```{r}
-psych::alpha(subset(raw4a2, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
+psych::alpha(subset(raw4_8, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
 ```
 
 ### QQ-Gesamt
 ```{r}
-psych::alpha(subset(raw4a2, select=c(QQ_01:QQ_N14), check.keys=TRUE))
+psych::alpha(subset(raw4_8, select=c(QQ_01:QQ_N14), check.keys=TRUE))
 ```
   > Wie bereits im der oberen Analyse der neuen Fragen bereits gesehen, fällt auch in der Gesamtbetrachtung auf, dass gerade das Item `QQ_N08` eine Item-Rest-Korrelation von 0.207 hat, weswegen dieses Item aus dem Fragebogen fällt
 
 ### QQ_N08 aus dem Datensatz werfen
 ```{r}
-raw4b <- raw4a2 %>% 
+raw4_9 <- raw4_8 %>% 
   select(-QQ_N08)
 ```
 
 #### QQ_Gesamt prüfen
 ```{r}
-psych::alpha(subset(raw4b, select=c(QQ_01:QQ_N14), check.keys=TRUE))
+psych::alpha(subset(raw4_9, select=c(QQ_01:QQ_N14), check.keys=TRUE))
 ```
 
 ## SL
 ```{r}
-psych::alpha(subset(raw4b, select=c(SL_01:SL_07)), check.keys=TRUE)
+psych::alpha(subset(raw4_9, select=c(SL_01:SL_07)), check.keys=TRUE)
 ```
 
 # 9.Spearman-Brown-Formel zum Berechnen der Reliabilität bei Testverlängerung
 ```{r}
 library(CTT)
-spearman.brown(0.7579793, input = 13/7 ,n.or.r = "n")
+spearman.brown(0.7522749, input = 13/7 ,n.or.r = "n")
 ```
-  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von .8532938 vorweisen würde und diese die Relibilität der von uns verlängerten Skala 0.8540333 beträgt (-0.0007395). Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
+  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von 0.8493896 vorweisen würde und diese die Relibilität der von uns verlängerten Skala 0.8540333 beträgt (-0.0046437). Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
 
 # 10. Skalen zusammenfassen
 ## Irriation (IS)
 ```{r}
-d_work <- raw4b
-d_work$IS_mean <- rowMeans(subset(raw4b, select = c(IS_K01, IS_K02, IS_K03, IS_K04, IS_E05, IS_E06, IS_E07, IS_E08)))
-d_work$IS_K_mean <- rowMeans(subset(raw4b, select = c(IS_K01, IS_K02, IS_K03, IS_K04)))
-d_work$IS_E_mean <- rowMeans(subset(raw4b, select = c(IS_E05, IS_E06, IS_E07, IS_E08)))
+d_work <- raw4_9
+d_work$IS_mean <- rowMeans(subset(raw4_9, select = c(IS_K01, IS_K02, IS_K03, IS_K04, IS_E05, IS_E06, IS_E07, IS_E08)))
+d_work$IS_K_mean <- rowMeans(subset(raw4_9, select = c(IS_K01, IS_K02, IS_K03, IS_K04)))
+d_work$IS_E_mean <- rowMeans(subset(raw4_9, select = c(IS_E05, IS_E06, IS_E07, IS_E08)))
 ```
 
 ## Kultur für psychologisches Empowerment in Organisationen (CPE)
 ```{r}
-d_work$CPE_mean <- rowMeans(subset(raw4b, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04, CPE_I05, CPE_I06, CPE_I07, CPE_I08, CPE_M09, CPE_M10, CPE_M11, CPE_M12, CPE_E13, CPE_E14, CPE_E15, CPE_E16)), na.rm=TRUE)
-d_work$CPE_C_mean <- rowMeans(subset(raw4b, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04)))
-d_work$CPE_I_mean <- rowMeans(subset(raw4b, select = c(CPE_I05, CPE_I06, CPE_I07, CPE_I08)))
-d_work$CPE_M_mean <- rowMeans(subset(raw4b, select = c(CPE_M09, CPE_M10, CPE_M11, CPE_M12)), na.rm = TRUE)
-d_work$CPE_E_mean <- rowMeans(subset(raw4b, select = c(CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
+d_work$CPE_mean <- rowMeans(subset(raw4_9, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04, CPE_I05, CPE_I06, CPE_I07, CPE_I08, CPE_M09, CPE_M10, CPE_M11, CPE_M12, CPE_E13, CPE_E14, CPE_E15, CPE_E16)), na.rm=TRUE)
+d_work$CPE_C_mean <- rowMeans(subset(raw4_9, select = c(CPE_C01, CPE_C02, CPE_C03, CPE_C04)))
+d_work$CPE_I_mean <- rowMeans(subset(raw4_9, select = c(CPE_I05, CPE_I06, CPE_I07, CPE_I08)))
+d_work$CPE_M_mean <- rowMeans(subset(raw4_9, select = c(CPE_M09, CPE_M10, CPE_M11, CPE_M12)), na.rm = TRUE)
+d_work$CPE_E_mean <- rowMeans(subset(raw4_9, select = c(CPE_E13, CPE_E14, CPE_E15, CPE_E16)))
 ```
 
 ## Psychologische Sicherheit (PS)
 ```{r}
-d_work$PS_mean <- rowMeans(subset(raw4b, select = c(PS_01, PS_02, PS_03, PS_04, PS_05, PS_06, PS_07)))
+d_work$PS_mean <- rowMeans(subset(raw4_9, select = c(PS_01, PS_02, PS_03, PS_04, PS_05, PS_06, PS_07)))
 ```
 
 ## Organisationelles Commitment (OCA)
 ```{r}
-d_work$OC_A_mean <- rowMeans(subset(raw4b, select = c(OC_A01, OC_A02, OC_A03, OC_A04, OC_A05)))
+d_work$OC_A_mean <- rowMeans(subset(raw4_9, select = c(OC_A01, OC_A02, OC_A03, OC_A04, OC_A05)))
 ```
 
 ## Quiet Quitting
 ```{r}
-d_work$QQ_Anand_mean <- rowMeans(subset(raw4b, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07)))
-d_work$QQ_Eigene_mean <- rowMeans(subset(raw4b, select = c(QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14)))
-d_work$QQ_Gesamt_mean <- rowMeans(subset(raw4b, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07, QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14)))
+d_work$QQ_Anand_mean <- rowMeans(subset(raw4_9, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07)))
+d_work$QQ_Eigene_mean <- rowMeans(subset(raw4_9, select = c(QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14)))
+d_work$QQ_Gesamt_mean <- rowMeans(subset(raw4_9, select = c(QQ_01, QQ_02, QQ_03, QQ_04, QQ_05, QQ_06, QQ_07, QQ_N09, QQ_N10, QQ_N11, QQ_N12, QQ_N13, QQ_N14)))
 ```
 
 ## Servant Leadership
 ```{r}
-d_work$SL_mean <- rowMeans(subset(raw4b, select = c(SL_01, SL_02, SL_03, SL_04, SL_05, SL_06, SL_07)), na.rm = TRUE)
+d_work$SL_mean <- rowMeans(subset(raw4_9, select = c(SL_01, SL_02, SL_03, SL_04, SL_05, SL_06, SL_07)), na.rm = TRUE)
 ```
 
 ## Einzelne Items aus dem Datensatz entfernen
@@ -651,6 +623,7 @@ d_work_s1 %>%
   shave()
 ```
 
+## Subser #1 erstellen
 ```{r}
 subset_cor <- subset(d_work,
                      select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, IS_mean, CPE_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Gesamt_mean, SL_mean))
@@ -663,7 +636,7 @@ apa.cor.table(subset_cor, filename = "corr-com.doc", table.number = 2)
   > Aufgrund dessen, dass weder das Geschlecht, Bildung, Beschäftigungsart, Arbeitszeitmodell und Remotearbeit keinen Zusammenhang mit QQ oder den möglichen Prädiktoren haben, werden diese als Kontrollvariablen aus der Untersuchung ausgeschlossen!
 
 
-###### NEU NEU NEU NEU 
+## Subset #2 erstellen
 ```{r}
 subset_cor1 <- subset(d_work,
                      select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
@@ -675,8 +648,8 @@ M
 corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
 ```
 
-# 13. Überprüfung der Hypothesen
 
+# 13. Überprüfung der Hypothesen
 ## Alter in Kategorien unterteilen
 ```{r}
 d_work_lm <- d_work_s %>% 
@@ -686,7 +659,7 @@ d_work_lm <- d_work_s %>%
   ))
 ```
 
-### T-Test zur Überprüfung als Kontrollvariable
+### Mögliche Kontrollvariablen testen
 ```{r}
 t_test_result_QQ_Alter <- t.test(QQ_Anand_mean ~ Alter_kat, data = d_work_lm)
 print(t_test_result_QQ_Alter)
@@ -716,9 +689,6 @@ print(t_test_result_SL_Alter)
 t_test_result_OCA_Alter <- t.test(OC_A_mean ~ Alter_kat, data = d_work_lm)
 print(t_test_result_OCA_Alter)
 ```
-  > Aufgrund der nicht signifikaten T-Tests mit der AV und den UVs ist Alter_kat nicht als Kontrollvariable geeignet.
-  > Da Gehalt_n möglicherweise eine Scheinkorrelation erzeugen würde, wird auch diese nicht als Kontrollvariable in die Modell mit aufgenommen.
-  > Da die Residuen der Variable BZG nicht normalverteilt ist und die Position im Unternehmen 
 
 ```{r}
 lm_PiU <- lm(QQ_Anand_mean ~ Position_im_Unternehmen, data=d_work_lm)
@@ -730,12 +700,22 @@ lm_BZG <- lm(QQ_Anand_mean ~ BZG, data=d_work_lm)
 plot(lm_BZG)
 ```
 
+  > Aufgrund der nicht signifikaten T-Tests mit der AV und den UVs ist Alter_kat nicht als Kontrollvariable geeignet.
+  > Da Gehalt_n möglicherweise eine Scheinkorrelation erzeugen würde, wird auch diese nicht als Kontrollvariable in die Modell mit aufgenommen.
+  > Da die Residuen der Variable BZG nicht normalverteilt ist und die Position im Unternehmen 
+
 ## Organisationales Commitment - affektiv `OCA`
 ```{r}
 lm1 <- lm(QQ_Anand_mean ~ OC_A_mean, data=d_work_lm)
 summary(lm1)
 ```
   > signifikater Zusammenahng mit einer erklärten Varianz von ca 42 %
+
+### Effektgröße beschreiben
+```{r}
+effectsize::interpret_r2(0.4178, rules="cohen1988")
+```
+
 
 ## Irritation `IS`
 ```{r}
@@ -744,27 +724,46 @@ summary(lm2)
 ```
   > signifikater Zusammenahng mit einer erklärten Varianz von ca 4 %
 
+### Effektgröße beschreiben
+```{r}
+effectsize::interpret_r2(0.04226, rules="cohen1988")
+```
 
 ## Kultur für psychologisches Empowerment - `CPE`
 ```{r}
-lm3 <- lm(QQ_Anand_mean ~ CPE_mean, data=d_work_s)
+lm3 <- lm(QQ_Anand_mean ~ CPE_mean, data=d_work_lm)
 summary(lm3)
 ```
   > signifikater Zusammenahng mit einer erklärten Varianz von ca 38 %
 
+### Effektgröße beschreiben
+```{r}
+effectsize::interpret_r2(0.3766, rules="cohen1988")
+```
+
 ## Psychologische Sicherheit `PS` 
 ```{r}
-lm4 <- lm(QQ_Anand_mean ~ PS_mean, data=d_work_s)
+lm4 <- lm(QQ_Anand_mean ~ PS_mean, data=d_work_lm)
 summary(lm4)
 ```
   > signifikater Zusammenahng mit einer erklärten Varianz von ca 22 %
-  
+
+### Effektgröße beschreiben
+```{r}
+effectsize::interpret_r2(0.219, rules="cohen1988")
+```
+
 ## Servant Leadership `SL`
 ```{r}
-lm5 <- lm(QQ_Anand_mean ~ SL_mean, data=d_work_s)
+lm5 <- lm(QQ_Anand_mean ~ SL_mean, data=d_work_lm)
 summary(lm5)
 ```
   > signifikater Zusammenahng mit einer erklärten Varianz von ca 31 %
+
+### Effektgröße beschreiben
+```{r}
+effectsize::interpret_r2(0.3059, rules="cohen1988")
+```
 
 
 # Moderation: CPE moderiert den Zusammenhang von OCA und QQ
@@ -786,37 +785,27 @@ ggplot(d_work_plot_lm)+
 ```
 
 ```{r}
-lm6 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_s)
+lm6 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_lm)
 summary(lm6)
 ```
   > Keinen signifikante Moderation!
 
 ```{r}
 library(interactions)
-interact_plot(model=lm11, pred=OC_A_mean, modx=CPE_mean)
+interact_plot(model=lm6, pred=OC_A_mean, modx=CPE_mean)
 ```
 
 
 # Moderation: Alter moderiert den Zusammenhang von OCA und QQ-Gesamt
-## Alter in Kategorien unterteilen
 ```{r}
-d_work_plot_lm_1 <- d_work_plot_lm %>% 
-  mutate(Alter_kat = case_when(
-    Alter <= 36 ~ "jung",
-    Alter > 36 ~ "alt"
-  ))
-```
-  > Hierfür wurde der mediane Wert des Alters genutzt
-
-```{r}
-ggplot(d_work_plot_lm_1)+
+ggplot(d_work_lm)+
   geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Alter_kat)))+
   geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(Alter_kat)), method = "lm", se=FALSE)
 ```
 
 ## QQ_Anand
 ```{r}
-lm7 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_plot_lm_1)
+lm7 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_lm)
 summary(lm7)
 ```
 
