@@ -1,3 +1,8 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
 ```{r}
 library(tidyverse)
 library(readxl)
@@ -371,13 +376,6 @@ plot_alter
 ```
 ```{r}
 ggsave(filename = "Altersverteilung.png", plot = plot_alter, width = 8, height = 6, dpi = 300)
-```
-
-
-```{r}
-svg("Altersverteilung", width = 7, height = 5)
-print(plot_alter)
-dev.off()
 ```
 
 
