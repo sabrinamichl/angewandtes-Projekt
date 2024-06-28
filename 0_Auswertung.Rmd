@@ -331,16 +331,53 @@ raw4_6 %>%
 ```
 
 
-### visuelle Darstellung des Alters -> NEU NEU NEU
+### visuelle Darstellung des Alters 
+```{r}
+mean_value_Alter <- mean(raw4_6$Alter, na.rm=TRUE)
+median_value_Alter <- median(raw4_6$Alter, na.rm=TRUE)
+sd_value_Alter <- sd(raw4_6$Alter, na.rm=TRUE)
+```
+
 ```{r}
 raw4_6 %>% 
+  filter(is.na(Alter))
+```
+
+
+```{r}
+raw4_6a <- raw4_6 %>% 
+  drop_na(Alter) 
+raw4_6a
+```
+
+
+```{r}
+plot_alter <- raw4_6a %>% 
   ggplot()+
   aes(x=Alter)+
-  geom_histogram(fill = "green4")+
-  geom_vline(xintercept=40.26437 , color="orange2", size=2)+
-  geom_vline(xintercept=53.6445, color="yellow3", size=1)+
-  geom_vline(xintercept=26.88424, color="yellow3", size=1)+
+  geom_histogram(fill = "grey71",
+                 color = "gray60")+
+  geom_vline(xintercept=mean_value_Alter , color="turquoise3", size=2)+
+  geom_vline(xintercept=mean_value_Alter+sd_value_Alter, color="coral1", size=1.5)+
+  geom_vline(xintercept=mean_value_Alter-sd_value_Alter, color="coral1", size=1.5)+
+  geom_rect(xmin = mean_value_Alter - sd_value_Alter,
+            xmax=mean_value_Alter+sd_value_Alter,
+            ymin=-.1, ymax=0.2, fill="coral1")+
+  ylab("Anzahl")+
+  labs(caption = "N = 174,
+                  Türkis = Mittelwert, Rot = Standardabweichung")+
   theme_minimal()
+plot_alter
+```
+```{r}
+ggsave(filename = "Altersverteilung.png", plot = plot_alter, width = 8, height = 6, dpi = 300)
+```
+
+
+```{r}
+svg("Altersverteilung", width = 7, height = 5)
+print(plot_alter)
+dev.off()
 ```
 
 
@@ -828,26 +865,6 @@ dev.off()
 ```
 
 
-### QuantPsyc
-  > Modell zentriert direkt die Prädiktoren 
-
-```{r}
-library(QuantPsyc)
-fitMod_lm6 <- moderate.lm(x=OC_A_mean, z=CPE_mean, y=QQ_Anand_mean, data=d_work_lm,
-                      mc=FALSE)
-summary(fitMod_lm6)
-```
-
-#### Simple-Slope Analyse
-```{r}
-simpleSlope_lm6 <- sim.slopes(mod=fitMod_lm6, z=d_work_lm$CPE_mean, zsd=1,
-                           mcz=FALSE)
-```
-
-```{r}
-graph.mod(simpleSlope_lm6, x=OC_A_mean, y=QQ_Anand_mean, data=d_work_lm, ylab="AV", xlab="UV")
-```
-
 # H2.1: Moderation: Alter moderiert den Zusammenhang von OCA und QQ-Gesamt
 ```{r}
 ggplot(d_work_lm)+
@@ -860,6 +877,7 @@ ggplot(d_work_lm)+
 lm7 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_lm)
 summary(lm7)
 ```
+
 ```{r}
 confint(lm7)
 ```
@@ -872,7 +890,7 @@ plot_lm7
 ```
 
 ```{r}
-svg("H2.2.svg", width = 7, height = 5)
+svg("H2.1.svg", width = 7, height = 5)
 print(plot_lm7)
 dev.off()
 ```
