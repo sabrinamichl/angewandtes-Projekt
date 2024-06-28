@@ -710,7 +710,11 @@ plot(lm_BZG)
 lm1 <- lm(QQ_Anand_mean ~ CPE_mean, data=d_work_lm)
 summary(lm1)
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca 38 %
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 38 %
+
+```{r}
+confint(lm1)
+```
 
 ### Effektgröße beschreiben
 ```{r}
@@ -723,11 +727,15 @@ effectsize::interpret_r2(0.3766, rules="cohen1988")
 lm2 <- lm(QQ_Anand_mean ~ OC_A_mean, data=d_work_lm)
 summary(lm2)
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca 42 %
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 42 %
 
 ### Effektgröße beschreiben
 ```{r}
 effectsize::interpret_r2(0.4178, rules="cohen1988")
+```
+
+```{r}
+confint(lm2)
 ```
 
 
@@ -736,33 +744,45 @@ effectsize::interpret_r2(0.4178, rules="cohen1988")
 lm3 <- lm(QQ_Anand_mean ~ PS_mean, data=d_work_lm)
 summary(lm3)
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca 22 %
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 22 %
 
 ### Effektgröße beschreiben
 ```{r}
 effectsize::interpret_r2(0.219, rules="cohen1988")
 ```
 
+```{r}
+confint(lm3)
+```
 
 ## H4: Irritation `IS`
 ```{r}
 lm4 <- lm(QQ_Anand_mean ~ IS_mean, data=d_work_lm)
 summary(lm4)
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca 4 %
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 4 %
+
 
 ### Effektgröße beschreiben
 ```{r}
 effectsize::interpret_r2(0.04226, rules="cohen1988")
 ```
 
+```{r}
+confint(lm4)
+```
 
 ## H5: Servant Leadership `SL`
 ```{r}
 lm5 <- lm(QQ_Anand_mean ~ SL_mean, data=d_work_lm)
 summary(lm5)
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca 31 %
+  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 31 %
+
+```{r}
+confint(lm5)
+```
+
 
 ### Effektgröße beschreiben
 ```{r}
@@ -783,8 +803,8 @@ d_work_plot_lm <- d_work_s %>%
 ## Visuelle Darstellung des möglichen Zusammenhangs
 ```{r}
 ggplot(d_work_plot_lm)+
-  geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean))+
-  geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Gesamt_mean, color=as.factor(CPE)), method = "lm", se=FALSE)+
+  geom_jitter(mapping = aes(x=OC_A_mean, y=QQ_Anand_mean))+
+  geom_smooth(mapping = aes(x=OC_A_mean, y=QQ_Anand_mean, color=as.factor(CPE)), method = "lm", se=FALSE)+
   theme_minimal()
 ```
 
@@ -797,8 +817,16 @@ summary(lm6)
 
 ```{r}
 library(interactions)
-interact_plot(model=lm6, pred=OC_A_mean, modx=CPE_mean)
+plot_lm6 <-interact_plot(model=lm6, pred=OC_A_mean, modx=CPE_mean)
+plot_lm6
 ```
+
+```{r}
+svg("H2.2.svg", width = 7, height = 5)
+print(plot_lm6)
+dev.off()
+```
+
 
 ### QuantPsyc
   > Modell zentriert direkt die Prädiktoren 
@@ -832,12 +860,22 @@ ggplot(d_work_lm)+
 lm7 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_lm)
 summary(lm7)
 ```
-
 ```{r}
-interact_plot(model=lm7, pred=OC_A_mean, modx=Alter_kat)
+confint(lm7)
 ```
 
 
+```{r}
+plot_lm7 <-interact_plot(model=lm7, pred=OC_A_mean, modx=Alter_kat,
+              interval = TRUE)
+plot_lm7
+```
+
+```{r}
+svg("H2.2.svg", width = 7, height = 5)
+print(plot_lm7)
+dev.off()
+```
 
 
 
