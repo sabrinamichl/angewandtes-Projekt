@@ -404,7 +404,7 @@ raw4_6 %>%
   round(2)
 ```
  1 = befristet, 2 = unbefristet
-
+ 
 ## Arbeitszeitmodell = Stunden/Woche
 ```{r}
 raw4_6 %>% 
@@ -610,9 +610,9 @@ psych::alpha(subset(raw4_9, select=c(SL_01:SL_07)), check.keys=TRUE)
 # 9.Spearman-Brown-Formel zum Berechnen der Reliabilität bei Testverlängerung
 ```{r}
 library(CTT)
-spearman.brown(0.7522749, input = 13/7 ,n.or.r = "n")
+spearman.brown(0.7579793, input = 13/7 ,n.or.r = "n")
 ```
-  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von 0.8493896 vorweisen würde und diese die Relibilität der von uns verlängerten Skala 0.8540333 beträgt (-0.0046437). Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
+  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von 0.8532938 vorweisen würde und diese die Relibilität der von uns verlängerten Skala 0.8540333 beträgt (-0.0007395). Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
 
 # 10. Skalen zusammenfassen
 ## Irriation (IS)
@@ -752,9 +752,10 @@ t_test_result_OCA_Alter <- t.test(OC_A_mean ~ Alter_kat, data = d_work_lm)
 print(t_test_result_OCA_Alter)
 ```
 
+### Beschaeftigungsart
 ```{r}
-lm_PiU <- lm(QQ_Anand_mean ~ Position_im_Unternehmen, data=d_work_lm)
-plot(lm_PiU)
+t_test_result_BA_QQ <- t.test(QQ_Anand_mean ~ Beschaeftigungsart, data = d_work_lm)
+print(t_test_result_BA_QQ)
 ```
 
 ```{r}
@@ -763,8 +764,8 @@ plot(lm_BZG)
 ```
 
   > Aufgrund der nicht signifikaten T-Tests mit der AV und den UVs ist Alter_kat nicht als Kontrollvariable geeignet.
-  > Da Gehalt_n möglicherweise eine Scheinkorrelation erzeugen würde, wird auch diese nicht als Kontrollvariable in die Modell mit aufgenommen.
-  > Da die Residuen der Variable BZG nicht normalverteilt ist und die Position im Unternehmen 
+  > Da Gehalt_n möglicherweise eine Scheinkorrelation erzeugen würde, dies wird trotzdessen in das Modell mit aufgenommen, da das Gehalt möglicherweie einen Erklärungsgehalt liefert. Die Hinzunahme wird jedoch in der Limitation noch diskutiert.
+  > Da die Residuen der Variable BZG nicht normalverteilt ist. 
 
 ## Subser #3 erstellen
 ```{r}
@@ -823,14 +824,21 @@ summary(lm05)
 anova <- anova(lm0, lm01, lm02, lm03, lm04, lm05)
 anova
 ```
-  > Das beste Modell mit dem höchsten Erklärungswert ist Modell lm02 mit CPE und OCA mit QQ und den beiden Kontrollvariablen
+  > Das beste Modell mit dem höchsten Erklärungswert ist Modell lm02 mit CPE und OCA mit QQ und den beiden Kontrollvariablen. 
+    Um das Konstrukt QQ zu erklären, liefern OCA und CPE den höchsten Gehalt.
 
 # Hypothesenprüfung - Korrelation
 ## H1: Kultur für psychologisches Empowerment - `CPE`
 ```{r}
-d_work_lm %>%
-  summarise(cor_QQ_CPE = cor(CPE_mean, QQ_Anand_mean, use="complete.obs"))
+cor_result_H1 <- cor.test(d_work_lm$CPE_mean, d_work_lm$QQ_Anand_mean, use = "complete.obs")
 ```
+
+```{r}
+cor_result_H1$estimate
+cor_result_H1$conf.int
+cor_result_H1$p.value
+```
+
 ### Effektgröße beschreiben
 ```{r}
 effectsize::interpret_r(-0.6136367, rules = "cohen1988")
@@ -838,8 +846,13 @@ effectsize::interpret_r(-0.6136367, rules = "cohen1988")
 
 ## H2: Organisationales Commitment - affektiv `OCA` 
 ```{r}
-d_work_lm %>%
-  summarise(cor_QQ_OCA = cor(OC_A_mean, QQ_Anand_mean, use="complete.obs"))
+cor_result_H2 <- cor.test(d_work_lm$OC_A_mean, d_work_lm$QQ_Anand_mean, use = "complete.obs")
+```
+
+```{r}
+cor_result_H2$estimate
+cor_result_H2$conf.int
+cor_result_H2$p.value
 ```
 
 ### Effektgröße beschreiben
@@ -848,13 +861,15 @@ effectsize::interpret_r(-0.6463683, rules = "cohen1988")
 ```
 
 
-
-
-
 ## H3: Psychologische Sicherheit `PS` 
 ```{r}
-d_work_lm %>%
-  summarise(cor_QQ_PS = cor(PS_mean, QQ_Anand_mean, use="complete.obs"))
+cor_result_H3 <- cor.test(d_work_lm$PS_mean, d_work_lm$QQ_Anand_mean, use = "complete.obs")
+```
+
+```{r}
+cor_result_H3$estimate
+cor_result_H3$conf.int
+cor_result_H3$p.value
 ```
 
 ### Effektgröße beschreiben
@@ -863,11 +878,15 @@ effectsize::interpret_r(-0.4679921, rules = "cohen1988")
 ```
 
 
-
 ## H4: Irritation `IS`
 ```{r}
-d_work_lm %>%
-  summarise(cor_QQ_IS = cor(IS_mean, QQ_Anand_mean, use="complete.obs"))
+cor_result_H4 <- cor.test(d_work_lm$IS_mean, d_work_lm$QQ_Anand_mean, use = "complete.obs")
+```
+
+```{r}
+cor_result_H4$estimate
+cor_result_H4$conf.int
+cor_result_H4$p.value
 ```
 
 ### Effektgröße beschreiben
@@ -878,8 +897,13 @@ effectsize::interpret_r(0.2055619, rules = "cohen1988")
 
 ## H5: Servant Leadership `SL`
 ```{r}
-d_work_lm %>%
-  summarise(cor_QQ_SL = cor(SL_mean, QQ_Anand_mean, use="complete.obs"))
+cor_result_H5 <- cor.test(d_work_lm$SL_mean, d_work_lm$QQ_Anand_mean, use = "complete.obs")
+```
+
+```{r}
+cor_result_H5$estimate
+cor_result_H5$conf.int
+cor_result_H5$p.value
 ```
 
 ### Effektgröße beschreiben
