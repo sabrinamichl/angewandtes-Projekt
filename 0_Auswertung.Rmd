@@ -403,7 +403,8 @@ raw4_6 %>%
     mutate(prob = n/sum(n)) %>% 
   round(2)
 ```
- 1 = befristet, 2 = unbefristet
+  > 1 = befristet,
+  > 2 = unbefristet
  
 ## Arbeitszeitmodell = Stunden/Woche
 ```{r}
@@ -467,7 +468,7 @@ raw4_7 <- raw4_6 %>%
 ```{r}
 raw4_7 %>% 
   select(Gehalt, Gehalt_n) %>% 
-  arrange(desc(Gehalt))
+  count(Gehalt, Gehalt_n)
 ```
 
 ```{r}
@@ -475,7 +476,6 @@ raw4_8 <- raw4_7 %>%
   select(-Gehalt) %>% 
   select(ID, Alter, Geschlecht, Bildung, Bildung_sonstig, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, everything())
 ```
-
 
 ```{r}
 raw4_8 %>% 
@@ -673,21 +673,9 @@ skim(d_work_s)
 
 
 # 12. Korrelationen zwischen den Skalen
+## Subset #1 erstellen
 ```{r}
-d_work_s1 <- d_work_s %>% 
-  select(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean)
-```
-
-```{r}
-d_work_s1 %>% 
-  select(where(is.numeric)) %>% 
-  correlate() %>% 
-  shave()
-```
-
-## Subser #1 erstellen
-```{r}
-subset_cor <- subset(d_work,
+subset_cor <- subset(d_work_s,
                      select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, IS_mean, CPE_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
@@ -700,7 +688,7 @@ apa.cor.table(subset_cor, filename = "corr-com.doc", table.number = 2)
 
 ## Subset #2 erstellen
 ```{r}
-subset_cor1 <- subset(d_work,
+subset_cor1 <- subset(d_work_s,
                      select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
@@ -767,9 +755,9 @@ plot(lm_BZG)
   > Da Gehalt_n möglicherweise eine Scheinkorrelation erzeugen würde, dies wird trotzdessen in das Modell mit aufgenommen, da das Gehalt möglicherweie einen Erklärungsgehalt liefert. Die Hinzunahme wird jedoch in der Limitation noch diskutiert.
   > Da die Residuen der Variable BZG nicht normalverteilt ist. 
 
-## Subser #3 erstellen
+## Subset #3 erstellen
 ```{r}
-subset_cor_NEU <- subset(d_work,
+subset_cor_NEU <- subset(d_work_lm,
                      select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, IS_mean, CPE_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Gesamt_mean, SL_mean))
 ```
 
@@ -799,6 +787,11 @@ summary(lm02)
 ```
  > nach dem Durchtesten der verschiedenen Variablen stellte sich heraus, dass CPE, neben OCA (2. Ebene) den höchsten Erklärungswert zu QQ beiträgt!
 
+```{r}
+confint(lm02)
+```
+
+
 ## 4. Ebene
 ```{r}
 lm03 <- lm(QQ_Anand_mean ~ scale(OC_A_mean) + scale(CPE_mean) + scale(SL_mean) + Gehalt_n + Position_im_Unternehmen, data = d_work_lm)
@@ -819,13 +812,14 @@ lm05 <- lm(QQ_Anand_mean ~ scale(OC_A_mean) + scale(CPE_mean) + scale(SL_mean) +
 summary(lm05)
 ```
 
-### Anova
+## ANOVA
 ```{r}
 anova <- anova(lm0, lm01, lm02, lm03, lm04, lm05)
 anova
 ```
   > Das beste Modell mit dem höchsten Erklärungswert ist Modell lm02 mit CPE und OCA mit QQ und den beiden Kontrollvariablen. 
     Um das Konstrukt QQ zu erklären, liefern OCA und CPE den höchsten Gehalt.
+
 
 # Hypothesenprüfung - Korrelation
 ## H1: Kultur für psychologisches Empowerment - `CPE`
@@ -834,9 +828,9 @@ cor_result_H1 <- cor.test(d_work_lm$CPE_mean, d_work_lm$QQ_Anand_mean, use = "co
 ```
 
 ```{r}
-cor_result_H1$estimate
-cor_result_H1$conf.int
-cor_result_H1$p.value
+cor_result_H1$estimate %>% round(2)
+cor_result_H1$conf.int %>% round(2)
+cor_result_H1$p.value 
 ```
 
 ### Effektgröße beschreiben
@@ -850,8 +844,8 @@ cor_result_H2 <- cor.test(d_work_lm$OC_A_mean, d_work_lm$QQ_Anand_mean, use = "c
 ```
 
 ```{r}
-cor_result_H2$estimate
-cor_result_H2$conf.int
+cor_result_H2$estimate %>% round(2)
+cor_result_H2$conf.int %>% round(2)
 cor_result_H2$p.value
 ```
 
@@ -867,8 +861,8 @@ cor_result_H3 <- cor.test(d_work_lm$PS_mean, d_work_lm$QQ_Anand_mean, use = "com
 ```
 
 ```{r}
-cor_result_H3$estimate
-cor_result_H3$conf.int
+cor_result_H3$estimate %>% round(2)
+cor_result_H3$conf.int %>% round(2)
 cor_result_H3$p.value
 ```
 
@@ -884,8 +878,8 @@ cor_result_H4 <- cor.test(d_work_lm$IS_mean, d_work_lm$QQ_Anand_mean, use = "com
 ```
 
 ```{r}
-cor_result_H4$estimate
-cor_result_H4$conf.int
+cor_result_H4$estimate %>% round(2)
+cor_result_H4$conf.int %>% round(2)
 cor_result_H4$p.value
 ```
 
@@ -901,8 +895,8 @@ cor_result_H5 <- cor.test(d_work_lm$SL_mean, d_work_lm$QQ_Anand_mean, use = "com
 ```
 
 ```{r}
-cor_result_H5$estimate
-cor_result_H5$conf.int
+cor_result_H5$estimate %>% round(2)
+cor_result_H5$conf.int %>% round(2)
 cor_result_H5$p.value
 ```
 
@@ -937,8 +931,13 @@ summary(lm06)
   > Keinen signifikante Moderation!
 
 ```{r}
+confint(lm06)
+```
+
+
+```{r}
 library(interactions)
-plot_lm06 <-interact_plot(model=lm6, pred=OC_A_mean, modx=CPE_mean)
+plot_lm06 <-interact_plot(model=lm06, pred=OC_A_mean, modx=CPE_mean)
 plot_lm06
 ```
 
