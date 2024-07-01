@@ -395,6 +395,7 @@ raw4_6 %>%
   geom_histogram(fill = "green4")+
   theme_minimal()
 ```
+
 ## Beschäftigungsart
 ```{r}
 raw4_6 %>% 
@@ -484,6 +485,12 @@ raw4_8 %>%
   theme_minimal()
 ```
 
+```{r}
+raw4_8 %>% 
+  count(Gehalt_n) %>% 
+  mutate(prob = n/sum(n)) %>% 
+  round(2)
+```
 
 ## Position im Unternehmen
 ```{r}
@@ -493,9 +500,29 @@ raw4_8 %>%
   round(2)
 ```
 
+```{r}
+raw4_8a <- raw4_8 %>% 
+  mutate(Position_im_Unternehmen = case_when(
+    Position_im_Unternehmen == 1 ~ 0,
+    Position_im_Unternehmen == 2 ~ 1,
+    Position_im_Unternehmen == 3 ~ 1,
+    Position_im_Unternehmen == 4 ~ 1))
+```
+  > 0 = keine Führungsposition
+  > 1 = Führungsposition
+
+
+```{r}
+raw4_8a %>% 
+  count(Position_im_Unternehmen) %>% 
+  mutate(prob = n/sum(n)) %>% 
+  round(2)
+```
+
+
 ### Visuelle Darstellung der Position im Unternehmen
 ```{r}
-raw4_8 %>% 
+raw4_8a %>% 
   ggplot()+
   aes(x=Position_im_Unternehmen)+
   geom_histogram(fill = "green4")+
@@ -505,7 +532,7 @@ raw4_8 %>%
 
 ## Remotearbeit
 ```{r}
-raw4_8 %>% 
+raw4_8a %>% 
   count(Remotarbeit) %>% 
   mutate(prob = n/sum(n)) %>% 
   round(2)
@@ -513,7 +540,7 @@ raw4_8 %>%
 
 ### Visuelle Darstellung der Remotearbeit
 ```{r}
-raw4_8 %>% 
+raw4_8a %>% 
   ggplot()+
   aes(x=Remotarbeit)+
   geom_bar(fill = "green4")+
@@ -522,51 +549,51 @@ raw4_8 %>%
 
 # 7. Datensatz `raw_8` zwischenspeichern
 ```{r}
-write.csv(raw4_8, file="raw4.csv")
+write.csv(raw4_8a, file="raw4.csv")
 ```
 
 
 # 8. Cronbachs Alpha berechnen
 ## Irritation
 ```{r}
-psych::alpha(subset(raw4_8, select=c(IS_K01:IS_E08)), check.keys=TRUE)
+psych::alpha(subset(raw4_8a, select=c(IS_K01:IS_E08)), check.keys=TRUE)
 ```
 
 ## CPE
 ```{r}
-psych::alpha(subset(raw4_8, select=c(CPE_C01:CPE_E16)), check.keys=TRUE)
+psych::alpha(subset(raw4_8a, select=c(CPE_C01:CPE_E16)), check.keys=TRUE)
 ```
 
 ## PS
 ```{r}
-psych::alpha(subset(raw4_8, select=c(PS_01:PS_07)), check.keys=TRUE)
+psych::alpha(subset(raw4_8a, select=c(PS_01:PS_07)), check.keys=TRUE)
 ```
 
 ## OCA
 ```{r}
-psych::alpha(subset(raw4_8, select=c(OC_A01:OC_A05)), check.keys=TRUE)
+psych::alpha(subset(raw4_8a, select=c(OC_A01:OC_A05)), check.keys=TRUE)
 ```
 
 ## QQ
 ### QQ-Anand
 ```{r}
-psych::alpha(subset(raw4_8, select=c(QQ_01:QQ_07), check.keys=TRUE))
+psych::alpha(subset(raw4_8a, select=c(QQ_01:QQ_07), check.keys=TRUE))
 ```
 
 ### QQ-Neu
 ```{r}
-psych::alpha(subset(raw4_8, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
+psych::alpha(subset(raw4_8a, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
 ```
 
 ### QQ-Gesamt
 ```{r}
-psych::alpha(subset(raw4_8, select=c(QQ_01:QQ_N14), check.keys=TRUE))
+psych::alpha(subset(raw4_8a, select=c(QQ_01:QQ_N14), check.keys=TRUE))
 ```
   > Wie bereits im der oberen Analyse der neuen Fragen bereits gesehen, fällt auch in der Gesamtbetrachtung auf, dass gerade das Item `QQ_N08` eine Item-Rest-Korrelation von 0.207 hat, weswegen dieses Item aus dem Fragebogen fällt
 
 ### QQ_N08 aus dem Datensatz werfen
 ```{r}
-raw4_9 <- raw4_8 %>% 
+raw4_9 <- raw4_8a %>% 
   select(-QQ_N08)
 ```
 
@@ -739,91 +766,126 @@ plot(lm_BZG)
   > Da Gehalt_n möglicherweise eine Scheinkorrelation erzeugen würde, wird auch diese nicht als Kontrollvariable in die Modell mit aufgenommen.
   > Da die Residuen der Variable BZG nicht normalverteilt ist und die Position im Unternehmen 
 
+## Subser #3 erstellen
+```{r}
+subset_cor_NEU <- subset(d_work,
+                     select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, IS_mean, CPE_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Gesamt_mean, SL_mean))
+```
 
+```{r}
+library(apaTables)
+apa.cor.table(subset_cor_NEU, filename = "corr-com_NEU.doc", table.number = 2)
+```
+
+# Hierarchische Regression
+## 1. Ebene
+```{r}
+lm0 <- lm(QQ_Anand_mean ~ Gehalt_n + Position_im_Unternehmen, data = d_work_lm)
+summary(lm0)
+```
+
+## 2. Ebene
+```{r}
+lm01 <- lm(QQ_Anand_mean ~ scale(OC_A_mean) + Gehalt_n + Position_im_Unternehmen, data = d_work_lm)
+summary(lm01)
+```
+ > nach dem Durchtesten der verschiedenen Variablen stellte sich heraus, dass OCA den höchsten Erklärungswert zu QQ beiträgt!
+
+## 3. Ebene
+```{r}
+lm02 <- lm(QQ_Anand_mean ~ scale(OC_A_mean) + scale(CPE_mean) + Gehalt_n + Position_im_Unternehmen, data = d_work_lm)
+summary(lm02)
+```
+ > nach dem Durchtesten der verschiedenen Variablen stellte sich heraus, dass CPE, neben OCA (2. Ebene) den höchsten Erklärungswert zu QQ beiträgt!
+
+## 4. Ebene
+```{r}
+lm03 <- lm(QQ_Anand_mean ~ scale(OC_A_mean) + scale(CPE_mean) + scale(SL_mean) + Gehalt_n + Position_im_Unternehmen, data = d_work_lm)
+summary(lm03)
+```
+ > nach dem Durchtesten der verschiedenen Variablen stellte sich heraus, dass SL neben CPE (3. Ebene) und OCA (2. Ebene) den höchsten Erklärungswert zu QQ beiträgt!
+
+## 5. Ebene
+```{r}
+lm04 <- lm(QQ_Anand_mean ~ scale(OC_A_mean) + scale(CPE_mean) + scale(SL_mean) + scale(IS_mean) + Gehalt_n + Position_im_Unternehmen, data = d_work_lm)
+summary(lm04)
+```
+> nach dem Durchtesten der verschiedenen Variablen stellte sich heraus, dass IS neben SL (4. Ebene), CPE (3. Ebene) und OCA (2. Ebene) den höchsten Erklärungswert zu QQ beiträgt!
+
+## 6. Ebene
+```{r}
+lm05 <- lm(QQ_Anand_mean ~ scale(OC_A_mean) + scale(CPE_mean) + scale(SL_mean) + scale(IS_mean) + scale(PS_mean) + Gehalt_n + Position_im_Unternehmen, data = d_work_lm)
+summary(lm05)
+```
+
+### Anova
+```{r}
+anova <- anova(lm0, lm01, lm02, lm03, lm04, lm05)
+anova
+```
+  > Das beste Modell mit dem höchsten Erklärungswert ist Modell lm02 mit CPE und OCA mit QQ und den beiden Kontrollvariablen
+
+# Hypothesenprüfung - Korrelation
 ## H1: Kultur für psychologisches Empowerment - `CPE`
 ```{r}
-lm1 <- lm(QQ_Anand_mean ~ CPE_mean, data=d_work_lm)
-summary(lm1)
+d_work_lm %>%
+  summarise(cor_QQ_CPE = cor(CPE_mean, QQ_Anand_mean, use="complete.obs"))
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 38 %
-
-```{r}
-confint(lm1)
-```
-
 ### Effektgröße beschreiben
 ```{r}
-effectsize::interpret_r2(0.3766, rules="cohen1988")
+effectsize::interpret_r(-0.6136367, rules = "cohen1988")
 ```
-
 
 ## H2: Organisationales Commitment - affektiv `OCA` 
 ```{r}
-lm2 <- lm(QQ_Anand_mean ~ OC_A_mean, data=d_work_lm)
-summary(lm2)
+d_work_lm %>%
+  summarise(cor_QQ_OCA = cor(OC_A_mean, QQ_Anand_mean, use="complete.obs"))
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 42 %
 
 ### Effektgröße beschreiben
 ```{r}
-effectsize::interpret_r2(0.4178, rules="cohen1988")
+effectsize::interpret_r(-0.6463683, rules = "cohen1988")
 ```
 
-```{r}
-confint(lm2)
-```
+
+
 
 
 ## H3: Psychologische Sicherheit `PS` 
 ```{r}
-lm3 <- lm(QQ_Anand_mean ~ PS_mean, data=d_work_lm)
-summary(lm3)
+d_work_lm %>%
+  summarise(cor_QQ_PS = cor(PS_mean, QQ_Anand_mean, use="complete.obs"))
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 22 %
 
 ### Effektgröße beschreiben
 ```{r}
-effectsize::interpret_r2(0.219, rules="cohen1988")
+effectsize::interpret_r(-0.4679921, rules = "cohen1988")
 ```
 
-```{r}
-confint(lm3)
-```
+
 
 ## H4: Irritation `IS`
 ```{r}
-lm4 <- lm(QQ_Anand_mean ~ IS_mean, data=d_work_lm)
-summary(lm4)
+d_work_lm %>%
+  summarise(cor_QQ_IS = cor(IS_mean, QQ_Anand_mean, use="complete.obs"))
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 4 %
-
 
 ### Effektgröße beschreiben
 ```{r}
-effectsize::interpret_r2(0.04226, rules="cohen1988")
+effectsize::interpret_r(0.2055619, rules = "cohen1988")
 ```
 
-```{r}
-confint(lm4)
-```
 
 ## H5: Servant Leadership `SL`
 ```{r}
-lm5 <- lm(QQ_Anand_mean ~ SL_mean, data=d_work_lm)
-summary(lm5)
+d_work_lm %>%
+  summarise(cor_QQ_SL = cor(SL_mean, QQ_Anand_mean, use="complete.obs"))
 ```
-  > signifikater Zusammenahng mit einer erklärten Varianz von ca. 31 %
-
-```{r}
-confint(lm5)
-```
-
 
 ### Effektgröße beschreiben
 ```{r}
-effectsize::interpret_r2(0.3059, rules="cohen1988")
+effectsize::interpret_r(-0.553062, rules = "cohen1988")
 ```
-
 
 # H2.2: Moderation: CPE moderiert den Zusammenhang von OCA und QQ
 ```{r}
@@ -845,20 +907,20 @@ ggplot(d_work_plot_lm)+
 
 
 ```{r}
-lm6 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_lm)
-summary(lm6)
+lm06 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_lm)
+summary(lm06)
 ```
   > Keinen signifikante Moderation!
 
 ```{r}
 library(interactions)
-plot_lm6 <-interact_plot(model=lm6, pred=OC_A_mean, modx=CPE_mean)
-plot_lm6
+plot_lm06 <-interact_plot(model=lm6, pred=OC_A_mean, modx=CPE_mean)
+plot_lm06
 ```
 
 ```{r}
 svg("H2.2.svg", width = 7, height = 5)
-print(plot_lm6)
+print(plot_lm06)
 dev.off()
 ```
 
@@ -872,27 +934,24 @@ ggplot(d_work_lm)+
 
 ## QQ_Anand
 ```{r}
-lm7 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_lm)
-summary(lm7)
+lm07 <- lm(QQ_Anand_mean ~ OC_A_mean*Alter_kat, data=d_work_lm)
+summary(lm07)
 ```
 
 ```{r}
-confint(lm7)
+confint(lm07)
 ```
 
 
 ```{r}
-plot_lm7 <-interact_plot(model=lm7, pred=OC_A_mean, modx=Alter_kat,
+plot_lm07 <- interact_plot(model=lm07, pred=OC_A_mean, modx=Alter_kat,
               interval = TRUE)
-plot_lm7
+plot_lm07
 ```
 
 ```{r}
 svg("H2.1.svg", width = 7, height = 5)
-print(plot_lm7)
+print(plot_lm07)
 dev.off()
 ```
-
-
-
 
