@@ -615,9 +615,9 @@ psych::alpha(subset(raw4_9, select=c(SL_01:SL_07)), check.keys=TRUE)
 # 9.Spearman-Brown-Formel zum Berechnen der Reliabilität bei Testverlängerung
 ```{r}
 library(CTT)
-spearman.brown(0.7579793, input = 13/7 ,n.or.r = "n")
+spearman.brown(0.7719431, input = 13/7 ,n.or.r = "n")
 ```
-  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von 0.8532938 vorweisen würde und die Relibilität der von uns verlängerten Skala 0.8540333 beträgt ergibt sich daraus eine Differenz von -0.0007395. Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
+  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von 0.862754 vorweisen würde und die Relibilität der von uns verlängerten Skala 0.8614523 beträgt ergibt sich daraus eine Differenz von 0.0013017 Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
 
 
 # 10. Skalen zusammenfassen
