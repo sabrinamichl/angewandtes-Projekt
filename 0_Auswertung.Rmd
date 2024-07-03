@@ -205,7 +205,7 @@ raw4_1 %>%
   select(ID, Alter, Geschlecht, Bildung, Time_sum_m, everything()) %>% 
   arrange(-desc(Time_sum_m))
 ```
-  > Wie sich zeigt, haben zwei Probanden den Fragebogen unter 2 SD vom Median beantwortet, weswegen diese aus dem Datensatz entfernt werden. Da weitere 5 Probanden länger als 2 SD vom Median zur Beantwortung benötigt haben, diese jedoch alle um die 50 Jahre oder älter sind, wird es von der gesamten Gruppe als logisch empfunden, dass diese Gruppe gegebenenfalls eher länger benötigt.
+  > Wie sich zeigt, haben zwei Probanden den Fragebogen unter 2 SD vom Median beantwortet, weswegen diese aus dem Datensatz entfernt werden. Da weitere 5 Probanden länger als 2 SD vom Median zur Beantwortung benötigt haben, diese jedoch alle um die 50 Jahre oder älter sind, wird es von der gesamten Gruppe als logisch empfunden, dass diese Gruppe gegebenenfalls eher länger benötigt, daher werden diese in der Stichprobe beibehalten.
 
 
 ### Personen mit einer unterdurchschnittlichen Bearbeitungsdauer rausschmeißen
@@ -266,7 +266,7 @@ raw4_4 <- raw4_3 %>%
 raw4_4 %>% 
   filter(BZG < 0.5) 
 ```
- > 14 Personen sind weniger als 0,5 Jahr bei ihrem aktuellen Unternehmen beschäftigt.
+ > 14 Personen sind weniger als 0,5 Jahr bei dem aktuellen Unternehmen beschäftigt.
  > In Deutschland liegt die gesetzliche Probezeit bei 6 Monaten (0,5 Jahr), da in diesem Zeitraum jederzeit, von beiden Seiten das Arbeitsverhältnis gekündigt werden kann, haben wir uns dazu entschlossen, diese Personen aus der Stichprobe zu entfernen, da hier eine tatsächliche Kündigung wahrscheinlicher wäre.
 
 ### Personen die weniger als ein halbes Jahr im Unternehmen sind, werden rausgeworfen
@@ -299,7 +299,8 @@ raw4_6 %>%
 raw4_6 %>% 
   ggplot()+
   aes(x=BZG)+
-  geom_histogram(fill = "green4")+
+  geom_histogram(fill = "grey71",
+                 color = "gray60")+
   theme_minimal()
 ```
 
@@ -387,7 +388,10 @@ raw4_6 %>%
 raw4_6 %>% 
   ggplot()+
   aes(x=Bildung)+
-  geom_histogram(fill = "green4")+
+  geom_histogram(fill = "grey71",
+                 color = "gray60")+
+  labs(caption = "2 = Mittelschule, 3 = Realschule, 4 = allgemeine Hochschulreife, 5 = Berufsausbildung, 
+                  6 = Bachelor, 7 = Master, 8 = Promotion, 9 = sonstiges")+
   theme_minimal()
 ```
 
@@ -416,7 +420,8 @@ raw4_6 %>%
 raw4_6 %>% 
   ggplot()+
   aes(x=Arbeitszeitmodell)+
-  geom_histogram(fill = "green4")+
+  geom_histogram(fill = "grey71",
+                 color = "gray60")+
   theme_minimal()
 ```
 
@@ -444,6 +449,7 @@ raw4_6 %>%
   geom_histogram(fill = "green4")+
   theme_minimal()
 ```
+
   > Nach Absprache mit Frau Sende werden die Gehaltsstufen 5-7 in einer Stufe zusammengefasst!
 
 
@@ -476,7 +482,8 @@ raw4_8 <- raw4_7 %>%
 raw4_8 %>% 
   ggplot()+
   aes(x=Gehalt_n)+
-  geom_histogram(fill = "green4")+
+  geom_histogram(fill = "grey71",
+                 color = "gray60")+
   theme_minimal()
 ```
 
@@ -505,6 +512,7 @@ raw4_8a <- raw4_8 %>%
 ```
   > 0 = keine Führungsposition
   > 1 = Führungsposition
+  > Wie mit Frau Sende besprochen, wird diese Variable als dichotome Variable umformatiert.
 
 
 ```{r}
@@ -520,7 +528,8 @@ raw4_8a %>%
 raw4_8a %>% 
   ggplot()+
   aes(x=Position_im_Unternehmen)+
-  geom_histogram(fill = "green4")+
+  geom_histogram(fill = "grey71",
+                 color = "gray60")+
   theme_minimal()
 ```
 
@@ -538,7 +547,8 @@ raw4_8a %>%
 raw4_8a %>% 
   ggplot()+
   aes(x=Remotarbeit)+
-  geom_bar(fill = "green4")+
+  geom_bar(fill = "grey71",
+                 color = "gray60")+
   theme_minimal()
 ```
 
@@ -584,7 +594,7 @@ psych::alpha(subset(raw4_8a, select=c(QQ_N08:QQ_N14), check.keys=TRUE))
 ```{r}
 psych::alpha(subset(raw4_8a, select=c(QQ_01:QQ_N14), check.keys=TRUE))
 ```
-  > Wie bereits im der oberen Analyse der neuen Fragen bereits gesehen, fällt auch in der Gesamtbetrachtung auf, dass gerade das Item `QQ_N08` eine Item-Rest-Korrelation von 0.217 hat, weswegen dieses Item aus dem Fragebogen fällt
+  > Wie bereits in der oberen Analyse der neuen Fragen gesehen, fällt auch in der Gesamtbetrachtung auf, dass vor allem das Item `QQ_N08` eine Item-Rest-Korrelation von 0.217 hat, weswegen dieses Item aus dem Fragebogen fällt.
 
 ### QQ_N08 aus dem Datensatz werfen
 ```{r}
@@ -607,7 +617,8 @@ psych::alpha(subset(raw4_9, select=c(SL_01:SL_07)), check.keys=TRUE)
 library(CTT)
 spearman.brown(0.7579793, input = 13/7 ,n.or.r = "n")
 ```
-  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von 0.8532938 vorweisen würde und diese die Relibilität der von uns verlängerten Skala 0.8540333 beträgt (-0.0007395). Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
+  > Aufgrund dessen, dass eine Verlängerung der Anand-Skala eine Reliabilität von 0.8532938 vorweisen würde und die Relibilität der von uns verlängerten Skala 0.8540333 beträgt ergibt sich daraus eine Differenz von -0.0007395. Da sich hierdurch nur eine geringe Verbesserung zeigt und dies unverhältnismäßig zur Komplexität der Skala beitragen würde, wird im Folgenden mit der Originalskala gerechnet.
+
 
 # 10. Skalen zusammenfassen
 ## Irriation (IS)
@@ -678,21 +689,7 @@ subset_cor <- subset(d_work_s,
 library(apaTables)
 apa.cor.table(subset_cor, filename = "corr-com.doc", table.number = 2)
 ```
-  > Aufgrund dessen, dass weder das Geschlecht, Bildung, Beschäftigungsart, Arbeitszeitmodell und Remotearbeit keinen Zusammenhang mit QQ oder den möglichen Prädiktoren haben, werden diese als Kontrollvariablen aus der Untersuchung ausgeschlossen!
-
-
-## Subset #2 erstellen
-```{r}
-subset_cor1 <- subset(d_work_s,
-                     select = c(ID, IS_mean, IS_K_mean, IS_E_mean, CPE_mean, CPE_C_mean, CPE_I_mean, CPE_M_mean, CPE_E_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Eigene_mean, QQ_Gesamt_mean, SL_mean))
-```
-
-```{r}
-M = cor(subset_cor1)
-M
-corrplot(M, method = 'shade', order = 'AOE', diag = FALSE, col=COL2('PiYG'))
-```
-
+  > Aufgrund dessen, dass weder das Geschlecht, Bildung, Beschäftigungsart, Arbeitszeitmodell und Remotearbeit einen Zusammenhang mit QQ oder den möglichen Prädiktoren haben, werden diese als Kontrollvariablen aus der Untersuchung ausgeschlossen!
 
 # 13. Überprüfung der Hypothesen
 ## Alter in Kategorien unterteilen
@@ -746,11 +743,12 @@ lm_BZG <- lm(QQ_Anand_mean ~ BZG, data=d_work_lm)
 plot(lm_BZG)
 ```
 
-  > Aufgrund der nicht signifikaten T-Tests mit der AV und den UVs ist Alter_kat nicht als Kontrollvariable geeignet.
-  > Da Gehalt_n möglicherweise eine Scheinkorrelation erzeugen würde, dies wird trotzdessen in das Modell mit aufgenommen, da das Gehalt möglicherweie einen Erklärungsgehalt liefert. Die Hinzunahme wird jedoch in der Limitation noch diskutiert.
-  > Da die Residuen der Variable BZG nicht normalverteilt ist. 
+  > Aufgrund der nicht signifikaten t-Tests mit der AV und den UVs ist Alter_kat nicht als Kontrollvariable geeignet.
+  > Gehalt_n erzeugt möglicherweise eine Scheinkorrelation, dies wird trotzdessen in das Modell mit aufgenommen, da  Gehalt möglicherweise einen Erklärungsgehalt liefern kann. 
+  > Da die Residuen der Variable BZG nicht normalverteilt sind, wird auch diese als Kontrollvariable nicht in die Analyse mit aufgenommen. 
 
-## Subset #3 erstellen
+
+## Subset #2 erstellen
 ```{r}
 subset_cor_NEU <- subset(d_work_lm,
                      select = c(ID, Alter, Geschlecht, Bildung, BZG, Beschaeftigungsart, Arbeitszeitmodell, Gehalt_n, Position_im_Unternehmen, Remotarbeit, IS_mean, CPE_mean, PS_mean, OC_A_mean, QQ_Anand_mean, QQ_Gesamt_mean, SL_mean))
@@ -905,7 +903,7 @@ effectsize::interpret_r(-0.553062, rules = "cohen1988")
 lm06 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_lm)
 summary(lm06)
 ```
-  > Keinen signifikante Moderation!
+  > Keine signifikante Moderation!
 
 ```{r}
 confint(lm06)
