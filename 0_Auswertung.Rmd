@@ -900,7 +900,7 @@ effectsize::interpret_r(-0.553062, rules = "cohen1988")
 
 # H2.2: Moderation: CPE moderiert den Zusammenhang von OCA und QQ
 ```{r}
-lm06 <- lm(QQ_Anand_mean ~ OC_A_mean*CPE_mean, data=d_work_lm)
+lm06 <- lm(QQ_Anand_mean ~ scale(OC_A_mean)*scale(CPE_mean), data=d_work_lm)
 summary(lm06)
 ```
   > Keine signifikante Moderation!
@@ -912,7 +912,8 @@ confint(lm06)
 
 ```{r}
 library(interactions)
-plot_lm06 <-interact_plot(model=lm06, pred=OC_A_mean, modx=CPE_mean)
+plot_lm06 <-interact_plot(model=lm06, pred=OC_A_mean, modx=CPE_mean,
+              interval = TRUE)
 plot_lm06
 ```
 
